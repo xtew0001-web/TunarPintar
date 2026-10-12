@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TunaiPintar is a simulated AI-powered treasury robo-advisor prototype for Malaysian SMEs.">
+    <meta name="theme-color" content="#0F766E">
+    <title>TunaiPintar — SME Treasury Demo</title>
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <section class="login-screen" id="login-screen" aria-labelledby="login-title">
+      <div class="login-story">
+        <a class="brand brand--light" href="#" aria-label="TunaiPintar home">
+          <span class="brand-mark" aria-hidden="true">T</span>
+          <span>TunaiPintar</span>
+        </a>
+        <div class="story-content">
+          <span class="eyebrow eyebrow--light">AI-powered SME treasury</span>
+          <h1 id="login-title">Turn idle business cash into <span>smarter returns.</span></h1>
+          <p class="story-lead">Turn idle business cash into low-risk return opportunities while protecting the liquidity needed for obligations.</p>
+          <div class="capability-grid" aria-label="Treasury capabilities">
+            <article tabindex="0">
+              <span class="capability-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 3 7-8M16 7h4v4"/></svg>
+              </span>
+              <div><h2>AI cash forecasting</h2><p>Understand expected inflows, outflows and upcoming obligations.</p></div>
+            </article>
+            <article tabindex="0">
+              <span class="capability-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-2.8 7.7-7 10-4.2-2.3-7-5.5-7-10V6l7-3zM9 12l2 2 4-4"/></svg>
+              </span>
+              <div><h2>Smart auto-sweep</h2><p>Allocate only the surplus remaining after obligations and reserves.</p></div>
+            </article>
+            <article tabindex="0">
+              <span class="capability-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m6 13v-6m5 6V3M2 21h20"/></svg>
+              </span>
+              <div><h2>Automatic pull-back</h2><p>Schedule funds to return before upcoming business payments.</p></div>
+            </article>
+          </div>
+        </div>
+        <p class="story-footnote">Designed for SME owners and finance teams without a dedicated treasury desk.</p>
+      </div>
+
+      <div class="login-panel">
+        <svg class="kl-skyline" viewBox="0 0 760 360" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 326h720M48 326v-72h48v72m14 0v-104h58v104m18 0v-54h44v54m28 0v-120h58v120m24 0v-82h42v82"/>
+            <path d="M391 326V139h31V70l17-28 17 28v69h31v187M407 139l32-18 32 18M416 95h46M423 70h32M439 42V18"/>
+            <path d="M500 326V139h31V70l17-28 17 28v69h31v187M516 139l32-18 32 18M525 95h46M532 70h32M548 42V18M487 174h13m96 0h17M487 198h13m96 0h17M456 165h44M487 165h9M596 165h9M531 95l17 10 17-10"/>
+            <path d="M439 155h109M439 167h109M439 155c28-18 81-18 109 0"/>
+            <path d="M620 326v-90h54v90m17 0v-136h28v136M0 326c96-18 158-17 258 0m338 0c60-14 106-13 164 0"/>
+          </g>
+        </svg>
+        <div class="login-box">
+          <div class="mobile-brand">
+            <span class="brand-mark" aria-hidden="true">T</span><strong>TunaiPintar</strong>
+          </div>
+          <span class="demo-label"><span aria-hidden="true">●</span> Interactive prototype</span>
+          <h2>Welcome to TunaiPintar</h2>
+          <p>Sign in to explore your treasury workspace.</p>
+          <p class="mobile-value-summary">Forecast obligations, protect liquidity and review potential treasury opportunities.</p>
+
+          <form id="login-form" novalidate>
+            <div class="field">
+              <label for="email">Work email</label>
+              <input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="finance@yourcompany.my" aria-describedby="email-error" required>
+              <span class="field-error" id="email-error" aria-live="polite"></span>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter any password" aria-describedby="password-error" required>
+              <span class="field-error" id="password-error" aria-live="polite"></span>
+            </div>
+            <fieldset class="choice-group">
+              <legend>Demo investment preference</legend>
+              <label class="choice-card">
+                <input type="radio" name="compliance" value="Shariah" checked>
+                <span><strong>Shariah</strong><small>Islamic money market</small></span>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="compliance" value="Non-Shariah">
+                <span><strong>Conventional</strong><small>Conventional money market</small></span>
+              </label>
+            </fieldset>
+            <div class="prototype-notice" role="note">
+              <span class="notice-icon" aria-hidden="true">i</span>
+              <p><strong>Demo access only.</strong> No real financial accounts or funds are connected.</p>
+            </div>
+            <button class="button button--primary button--full login-submit" id="login-submit" type="submit">
+              <span class="button-label">Continue to workspace</span>
+              <span class="button-spinner" aria-hidden="true"></span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <div class="app" id="app" hidden>
+      <div class="sidebar-scrim" id="sidebar-scrim"></div>
+      <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
+        <div class="sidebar-head">
+          <a class="brand" href="#dashboard" aria-label="TunaiPintar dashboard">
+            <span class="brand-mark" aria-hidden="true">T</span>
+            <span>TunaiPintar</span>
+          </a>
+          <button class="icon-button sidebar-close" id="sidebar-close" type="button" aria-label="Close navigation">×</button>
+        </div>
+        <a class="workspace-chip" href="#profile" aria-label="Open Nusantara Supply business profile">
+          <span class="company-avatar">NS</span>
+          <div><strong>Nusantara Supply</strong><small>Demo workspace</small></div>
+        </a>
+        <nav class="sidebar-nav">
+          <a href="#dashboard" data-view="dashboard" class="active"><span class="nav-icon" aria-hidden="true">⌂</span>Dashboard</a>
+          <a href="#cash-flow" data-view="cash-flow"><span class="nav-icon" aria-hidden="true">⌁</span>Cash Flow</a>
+          <a href="#investments" data-view="investments"><span class="nav-icon" aria-hidden="true">◈</span>Investments</a>
+          <a href="#transactions" data-view="transactions"><span class="nav-icon" aria-hidden="true">⇄</span>Transactions</a>
+          <a href="#reports" data-view="reports"><span class="nav-icon" aria-hidden="true">▥</span>Reports</a>
+          <a href="#integrations" data-view="integrations"><span class="nav-icon" aria-hidden="true">⛓</span>Integrations</a>
+          <a href="#settings" data-view="settings"><span class="nav-icon" aria-hidden="true">⚙</span>Settings</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="prototype-card">
+            <span class="status-dot"></span>
+            <div><strong>Prototype mode</strong><p>No real funds or accounts</p></div>
+          </div>
+          <button class="logout-button" id="logout-button" type="button"><span aria-hidden="true">↪</span> Log out of demo</button>
+        </div>
+      </aside>
+
+      <div class="app-column">
+        <header class="topbar">
+          <button class="icon-button menu-button" id="menu-button" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">☰</button>
+          <div class="page-heading">
+            <p id="page-kicker">Treasury overview</p>
+            <h1 id="page-title">Dashboard</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="demo-label demo-info-button" id="demo-info-button" type="button" aria-label="About the demo data">Demo data</button>
+            <span class="as-of" id="as-of">Loading…</span>
+            <a class="user-avatar" id="user-avatar" href="#profile" aria-label="Open user and business profile" title="Profile settings">DU</a>
+          </div>
+        </header>
+
+        <main id="main-content" tabindex="-1">
+          <div class="loading-state" id="loading-state" role="status">
+            <span class="spinner" aria-hidden="true"></span>
+            <div><strong>Preparing your demo workspace</strong><p>Loading fictional treasury data…</p></div>
+          </div>
+
+          <div class="error-state" id="error-state" role="alert" hidden>
+            <span class="error-symbol" aria-hidden="true">!</span>
+            <div><h2>We could not load the demo data</h2><p id="error-message">Check that the Flask server is running, then try again.</p></div>
+            <button class="button button--secondary" id="retry-button" type="button">Try again</button>
+          </div>
+
+          <div id="workspace" hidden>
+            <section class="view active" id="view-dashboard" data-view-panel="dashboard" aria-labelledby="dashboard-heading">
+              <div class="welcome-row">
+                <div><span class="eyebrow">Sunday, 4 October</span><h2 id="dashboard-heading">Good morning, Nusantara Supply</h2><p>Here is the latest view of your liquidity and simulated treasury opportunity.</p></div>
+                <a class="button button--primary" href="#investments">Review proposed sweep</a>
+              </div>
+
+              <div class="kpi-grid" id="kpi-grid"></div>
+
+              <div class="core-function-grid" id="core-functions" aria-label="TunaiPintar core functions"></div>
+
+              <div class="dashboard-grid">
+                <article class="card chart-card dashboard-chart-card">
+                  <div class="card-head"><div><span class="section-label">Cash visibility</span><h3>Cash position and forecast</h3></div><span class="forecast-key"><i></i> Forecast</span></div>
+                  <div id="dashboard-chart" class="chart-wrap"></div>
+                  <div class="chart-footer" id="dashboard-chart-footer"></div>
+                </article>
+                <aside class="insight-panel" id="dashboard-insight"></aside>
+              </div>
+
+              <div class="dashboard-grid dashboard-grid--bottom">
+                <article class="card">
+                  <div class="card-head"><div><span class="section-label">Next 30 days</span><h3>Upcoming expenses</h3></div><a href="#cash-flow" class="text-link">View forecast</a></div>
+                  <div id="upcoming-mini" class="item-list"></div>
+                </article>
+                <article class="card">
+                  <div class="card-head"><div><span class="section-label">Latest activity</span><h3>Recent transactions</h3></div><a href="#transactions" class="text-link">View all</a></div>
+                  <div id="recent-transactions" class="item-list"></div>
+                </article>
+              </div>
+
+              <article class="value-strip">
+                <span class="value-strip-icon" aria-hidden="true">✦</span>
+                <div><strong>Liquidity first, yield second.</strong><p>TunaiPintar estimates surplus cash only after protecting your chosen reserve and known obligations—helping lean SME finance teams make more informed treasury decisions.</p></div>
+              </article>
+            </section>
+
+            <section class="view" id="view-cash-flow" data-view-panel="cash-flow" aria-labelledby="cash-flow-heading">
+              <div class="section-intro"><div><span class="eyebrow">Forecast workspace</span><h2 id="cash-flow-heading">See what is coming before cash moves</h2><p>Historical balances and modelled future cash positions based on fictional invoices and obligations.</p></div><span class="simulation-pill">Simulated forecast</span></div>
+              <div class="segmented-control" id="forecast-range" aria-label="Forecast range">
+                <button type="button" data-range="30" class="active">30 days</button>
+                <button type="button" data-range="60">60 days</button>
+                <button type="button" data-range="90">90 days</button>
+              </div>
+              <article class="card chart-card cash-flow-chart-card">
+                <div class="chart-summary" id="cash-flow-summary"></div>
+                <div id="cash-flow-chart" class="chart-wrap chart-wrap--large"></div>
+                <p class="chart-caption">Solid line shows recorded demo balances; dashed line shows simulated forecast values. Forecasts may differ from actual outcomes.</p>
+              </article>
+              <div class="content-grid">
+                <article class="card span-2">
+                  <div class="card-head"><div><span class="section-label">Payment schedule</span><h3>Upcoming obligations</h3></div><span class="subtle-text" id="expense-total"></span></div>
+                  <div class="schedule-list" id="payment-schedule"></div>
+                </article>
+                <aside class="card forecast-method">
+                  <span class="feature-icon" aria-hidden="true">⌁</span>
+                  <span class="section-label">How this estimate works</span>
+                  <h3>An adaptive view of available cash</h3>
+                  <p>The recommendation is recalculated whenever a new payment, changed due date or updated balance affects liquidity. It protects obligations, the reserve and an uncertainty buffer before proposing a sweep.</p>
+                  <ul><li>New and floating payments reduce the proposal</li><li>Reserve and uncertainty buffer stay protected</li><li>Every sweep remains reviewable before placement</li></ul>
+                </aside>
+              </div>
+            </section>
+
+            <section class="view" id="view-investments" data-view-panel="investments" aria-labelledby="investments-heading">
+              <div class="section-intro"><div><span class="eyebrow">Surplus cash</span><h2 id="investments-heading">Review your simulated portfolio</h2><p>Indicative fund information and cash-sweep recommendations for learning purposes only.</p></div><span class="simulation-pill" id="compliance-badge">Shariah preference</span></div>
+              <div class="investment-grid">
+                <article class="card portfolio-card" id="portfolio-card"></article>
+                <article class="card allocation-card">
+                  <div class="card-head"><div><span class="section-label">Fund composition</span><h3>Portfolio allocation</h3></div><span class="subtle-text">Demo data</span></div>
+                  <div class="donut-layout"><div class="donut" id="allocation-donut"><span>100%<small>allocated</small></span></div><div id="allocation-legend" class="allocation-legend"></div></div>
+                </article>
+              </div>
+              <article class="sweep-card" id="sweep-card"></article>
+              <article class="pullback-card" id="pullback-card"></article>
+              <div class="risk-notice"><strong>Important:</strong> Money market funds are not bank deposits and are not risk-free. The return shown is indicative, may change, and is not guaranteed. This prototype cannot place or redeem investments.</div>
+            </section>
+
+            <section class="view" id="view-transactions" data-view-panel="transactions" aria-labelledby="transactions-heading">
+              <div class="section-intro"><div><span class="eyebrow">Activity ledger</span><h2 id="transactions-heading">Track every simulated cash movement</h2><p>Search and filter fictional operating and investment activity.</p></div><span class="simulation-pill">Demo transactions</span></div>
+              <article class="card">
+                <div class="filter-bar">
+                  <label class="search-field"><span class="sr-only">Search transactions</span><span aria-hidden="true">⌕</span><input id="transaction-search" type="search" placeholder="Search descriptions or IDs"></label>
+                  <label><span class="sr-only">Transaction type</span><select id="type-filter"><option value="All">All types</option><option>Inflow</option><option>Outflow</option><option>Investment</option></select></label>
+                  <label><span class="sr-only">Transaction status</span><select id="status-filter"><option value="All">All statuses</option><option>Completed</option><option>Pending</option></select></label>
+                  <button class="button button--ghost" id="clear-filters" type="button">Clear filters</button>
+                </div>
+                <div class="table-summary"><strong id="transaction-count">0 transactions</strong><span>All figures are simulated</span></div>
+                <div class="table-scroll">
+                  <table>
+                    <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Status</th><th class="align-right">Amount</th></tr></thead>
+                    <tbody id="transactions-body"></tbody>
+                  </table>
+                </div>
+                <div class="empty-state" id="transactions-empty" hidden><span aria-hidden="true">⌕</span><h3>No transactions found</h3><p>Try changing or clearing your filters.</p></div>
+              </article>
+            </section>
+
+            <section class="view" id="view-reports" data-view-panel="reports" aria-labelledby="reports-heading">
+              <div class="section-intro"><div><span class="eyebrow">Monthly reporting</span><h2 id="reports-heading">Understand cash performance at a glance</h2><p>Compare simulated cash movement, surplus levels and indicative investment returns.</p></div><button class="button button--secondary" id="export-report" type="button">Export demo report</button></div>
+              <div class="report-tabs" id="report-tabs" role="tablist" aria-label="Report month"></div>
+              <div class="kpi-grid report-kpis" id="report-kpis"></div>
+              <div class="content-grid">
+                <article class="card span-2">
+                  <div class="card-head"><div><span class="section-label">Monthly movement</span><h3>Cash in and cash out</h3></div><span class="subtle-text">Demo data</span></div>
+                  <div id="report-chart" class="bar-chart"></div>
+                </article>
+                <aside class="card report-note" id="report-note"></aside>
+              </div>
+            </section>
+
+            <section class="view" id="view-integrations" data-view-panel="integrations" aria-labelledby="integrations-heading">
+              <div class="section-intro"><div><span class="eyebrow">Data connections</span><h2 id="integrations-heading">Bring cash and accounting context together</h2><p>These fictional connections illustrate how TunaiPintar could improve forecast visibility.</p></div><span class="simulation-pill">No live connections</span></div>
+              <div class="prototype-banner"><span class="notice-icon" aria-hidden="true">i</span><p><strong>Integration simulator.</strong> Buttons only change this screen temporarily. No credentials are requested and no external service is contacted.</p></div>
+              <div class="integration-grid" id="integration-grid"></div>
+            </section>
+
+            <section class="view" id="view-settings" data-view-panel="settings" aria-labelledby="settings-heading">
+              <div class="section-intro"><div><span class="eyebrow">Demo preferences</span><h2 id="settings-heading">Set your liquidity guardrails</h2><p>Adjust the simulated reserve and communication preferences used in this prototype.</p></div><span class="simulation-pill">Browser-only settings</span></div>
+              <form id="settings-form" class="settings-layout" novalidate>
+                <article class="card settings-section">
+                  <div class="settings-heading"><span class="settings-icon" aria-hidden="true">RM</span><div><h3>Minimum cash reserve</h3><p>TunaiPintar will not propose a sweep that takes available cash below this amount.</p></div></div>
+                  <div class="reserve-field"><span>RM</span><input id="reserve-input" type="number" min="50000" max="400000" step="1000" aria-describedby="reserve-help reserve-error"><span>.00</span></div>
+                  <p class="help-text" id="reserve-help">Choose between RM50,000 and RM400,000.</p>
+                  <p class="field-error" id="reserve-error"></p>
+                  <div class="reserve-impact" id="reserve-impact"></div>
+                </article>
+                <article class="card settings-section">
+                  <div class="settings-heading"><span class="settings-icon" aria-hidden="true">✦</span><div><h3>Notifications</h3><p>Choose which simulated treasury updates you would like to receive.</p></div></div>
+                  <div class="toggle-list">
+                    <label><span><strong>Sweep proposals</strong><small>When surplus cash may be available</small></span><input type="checkbox" id="notify-sweeps"><i></i></label>
+                    <label><span><strong>Forecast warnings</strong><small>When cash may approach your reserve</small></span><input type="checkbox" id="notify-warnings"><i></i></label>
+                    <label><span><strong>Weekly summary</strong><small>A concise view of cash and investment activity</small></span><input type="checkbox" id="notify-weekly"><i></i></label>
+                  </div>
+                </article>
+                <article class="card settings-section">
+                  <div class="settings-heading"><span class="settings-icon" aria-hidden="true">✓</span><div><h3>Investment preference</h3><p>Selected when you entered the prototype.</p></div></div>
+                  <div class="preference-display"><div><strong id="settings-compliance">Shariah</strong><span id="settings-compliance-detail">Show Shariah-compliant fund examples</span></div><button class="button button--ghost" id="change-preference" type="button">Switch preference</button></div>
+                </article>
+                <div class="settings-actions"><p>Changes are temporary and are not saved to a server.</p><button class="button button--primary" type="submit">Save demo settings</button></div>
+              </form>
+            </section>
+
+            <section class="view" id="view-profile" data-view-panel="profile" aria-labelledby="profile-heading">
+              <div class="section-intro"><div><span class="eyebrow">Account and organisation</span><h2 id="profile-heading">Your profile</h2><p>Manage the user and business information shown in this browser-only prototype.</p></div><span class="simulation-pill">Demo profile</span></div>
+              <div class="profile-grid">
+                <aside class="card profile-summary">
+                  <div class="profile-avatar-large" id="profile-avatar-large" aria-hidden="true">DU</div>
+                  <span class="profile-status"><i></i> Active demo user</span>
+                  <h3 id="profile-display-name">Demo Finance User</h3>
+                  <p id="profile-display-email">finance@yourcompany.my</p>
+                  <dl class="profile-meta">
+                    <div><dt>Workspace role</dt><dd id="profile-display-role">Finance manager</dd></div>
+                    <div><dt>Access</dt><dd>Administrator</dd></div>
+                    <div><dt>Data mode</dt><dd>Simulation only</dd></div>
+                  </dl>
+                </aside>
+
+                <form class="card profile-form" id="profile-form" novalidate>
+                  <div class="card-head profile-card-head"><div><span class="section-label">User settings</span><h3>Personal information</h3></div><span class="subtle-text">Browser only</span></div>
+                  <div class="profile-form-fields">
+                    <div class="field"><label for="profile-name">Full name</label><input id="profile-name" type="text" autocomplete="name" aria-describedby="profile-name-error" required><span class="field-error" id="profile-name-error" aria-live="polite"></span></div>
+                    <div class="field"><label for="profile-role">Job title</label><input id="profile-role" type="text" autocomplete="organization-title" aria-describedby="profile-role-error" required><span class="field-error" id="profile-role-error" aria-live="polite"></span></div>
+                    <div class="field profile-field-wide"><label for="profile-email">Work email</label><input id="profile-email" type="email" autocomplete="email" aria-describedby="profile-email-error" required><span class="field-error" id="profile-email-error" aria-live="polite"></span></div>
+                  </div>
+                  <div class="profile-form-actions"><p>Changes remain in this demo session.</p><button class="button button--primary" type="submit">Save profile</button></div>
+                </form>
+
+                <article class="card business-profile">
+                  <div class="business-profile-head"><span class="company-avatar company-avatar--large">NS</span><div><span class="section-label">Business profile</span><h3 id="business-profile-name">Nusantara Supply Sdn. Bhd.</h3><p>Primary treasury workspace</p></div></div>
+                  <dl class="business-details">
+                    <div><dt>Industry</dt><dd id="business-profile-industry">Wholesale distribution</dd></div>
+                    <div><dt>Location</dt><dd id="business-profile-location">Shah Alam, Selangor</dd></div>
+                    <div><dt>Base currency</dt><dd id="business-profile-currency">MYR</dd></div>
+                    <div><dt>Forecast horizon</dt><dd id="business-profile-horizon">90 days</dd></div>
+                  </dl>
+                  <a class="button button--secondary button--full" href="#settings">Manage treasury settings</a>
+                </article>
+
+                <article class="card profile-chart-card">
+                  <div class="card-head"><div><span class="section-label">Business cash profile</span><h3>Cash position and 90-day outlook</h3></div><span class="forecast-key"><i></i> Transparent forecast range</span></div>
+                  <div id="profile-chart" class="chart-wrap profile-chart"></div>
+                  <div class="profile-chart-footer" id="profile-chart-footer"></div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </main>
+
+        <footer class="app-footer"><strong>TunaiPintar prototype</strong><span>For demonstration only · Not financial advice · No real transactions</span></footer>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="sweep-modal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description">
+        <button class="modal-close" id="modal-close" type="button" aria-label="Close review">×</button>
+        <span class="modal-icon" aria-hidden="true">↗</span>
+        <span class="section-label">Simulated action</span>
+        <h2 id="modal-title">Review proposed cash sweep</h2>
+        <p id="modal-description">Confirm the figures below. No money will move and no investment order will be created.</p>
+        <div class="modal-amount"><span>Proposed placement</span><strong id="modal-sweep-amount">RM0</strong></div>
+        <dl class="review-list" id="modal-review-list"></dl>
+        <label class="confirmation-check"><input type="checkbox" id="simulation-confirm"><span>I understand this is a simulation and not a real investment.</span></label>
+        <p class="field-error" id="confirm-error"></p>
+        <div class="modal-actions"><button class="button button--secondary" id="cancel-sweep" type="button">Cancel</button><button class="button button--primary" id="confirm-sweep" type="button">Confirm simulated sweep</button></div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden><span class="toast-icon" aria-hidden="true">✓</span><div><strong id="toast-title">Updated</strong><p id="toast-message"></p></div><button type="button" id="toast-close" aria-label="Dismiss notification">×</button></div>
+
+    <script src="/script.js" defer></script>
+  </body>
+</html>

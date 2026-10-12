@@ -1,0 +1,316 @@
+TUNAIPINTAR PROTOTYPE — IMPLEMENTATION PLAN
+===========================================
+
+1. PURPOSE AND PRODUCT STORY
+----------------------------
+Build a polished assignment prototype that explains how TunaiPintar helps Malaysian
+SMEs earn returns on genuinely surplus cash without putting payroll, supplier payments,
+or daily operations at risk.
+
+The site must clearly communicate:
+- Problem: SME cash often sits idle because owners cannot confidently identify how much
+  can be invested without creating a liquidity shortfall.
+- Target users: Malaysian SME owners, finance managers, and lean finance teams without a
+  dedicated treasury function.
+- Value proposition: accounting- and bank-data-aware cash-flow forecasting estimates the
+  safe-to-invest amount, maintains a conservative reserve, and proposes automated sweeps.
+- Customer benefits: better use of idle cash, preserved operating liquidity, less manual
+  treasury work, Shariah or Non-Shariah preferences, and clearer forward visibility.
+- Safety position: forecasts, transactions, connections, recommendations, returns, and
+  investment actions are simulated. Returns are estimates and are not guaranteed.
+
+Primary user journey:
+1. Read the short product explanation on the login screen.
+2. Enter any non-empty email and password and choose Shariah or Non-Shariah mode.
+3. Arrive at an authenticated-looking dashboard populated from /api/dashboard.
+4. Explore cash flow, investments, transactions, reports, integrations, and settings.
+5. Review and confirm a simulated sweep, adjust prototype settings, or log out.
+
+
+2. TECHNICAL ARCHITECTURE
+-------------------------
+- Backend: Python Flask.
+- Frontend: semantic HTML, CSS, and vanilla JavaScript only.
+- Data: backend/demo_data.json; no database and no real financial integrations.
+- Server: one Flask process serves the frontend files and the JSON API.
+- API: GET /api/dashboard reads demo_data.json and returns JSON.
+- Frontend routing: hash-based views (#dashboard, #cash-flow, #investments,
+  #transactions, #reports, #integrations, #settings) so each sidebar item is a distinct,
+  linkable view without adding a frontend framework.
+- Demo session: browser sessionStorage only. It is a UI convenience, not authentication.
+- Prototype changes: client-side state only. Confirmed sweeps, filter choices, connection
+  toggles, reserve changes, and notifications do not move money or modify bank accounts.
+- Charts: accessible inline SVG or Canvas generated with vanilla JavaScript; no charting
+  dependency is required.
+- Failure state: if /api/dashboard fails, show a helpful retry panel instead of an empty or
+  broken dashboard.
+
+Planned Flask routes:
+- GET /                       -> frontend/index.html
+- GET /style.css              -> frontend/style.css
+- GET /script.js              -> frontend/script.js
+- GET /assets/<path>          -> frontend/assets/<path>
+- GET /api/dashboard          -> parsed backend/demo_data.json
+- GET /health                 -> small optional health response used during testing
+
+Planned API data groups:
+- meta: demo label, currency, generated date, disclaimer
+- company: fictional SME name and compliance mode
+- balances: total business cash, reserved cash, estimated surplus, invested balance
+- cash_flow: historical and forecast monthly/weekly points
+- upcoming_expenses: fictional payment schedule
+- investment: fictional fund, allocation, indicative return, and proposed sweep
+- transactions: fictional deposits, expenses, investments, and redemptions
+- reports: monthly cash and simulated performance summaries
+- integrations: fictional bank and accounting connection states
+- settings: minimum reserve and notification preferences
+- insights: simulated AI recommendations and risk notes
+
+Data consistency rules:
+- Use RM throughout and format values consistently.
+- Total business cash, reserved cash, estimated surplus, invested balance, proposed sweep,
+  payments, reports, and transactions must reconcile logically.
+- Dates and descriptions must remain consistent between the dashboard, cash-flow schedule,
+  transaction table, and reports.
+- Every forecast, AI recommendation, transaction, connection, and return figure must carry
+  a visible “Demo data” or “Simulated” treatment where users could mistake it for live data.
+
+
+3. INFORMATION ARCHITECTURE AND PAGE STRUCTURE
+----------------------------------------------
+
+A. DEMO LOGIN
+- TunaiPintar wordmark and concise value proposition.
+- Problem, target customer, and three concrete customer benefits.
+- Email and password inputs; accept any non-empty values.
+- Shariah / Non-Shariah compliance selector.
+- Explicit notice: simulated login, no account security, no real financial access.
+- Validation for empty fields and a working sign-in button.
+
+B. SHARED AUTHENTICATED SHELL
+- Persistent desktop sidebar with all seven navigation destinations.
+- Mobile header and accessible sidebar drawer/menu.
+- Company identity, “Demo data” badge, compliance badge, prototype disclaimer, and logout.
+- Loading, API error, retry, and success/toast states.
+
+C. DASHBOARD
+- Four primary KPI cards: total business cash, reserved cash, estimated surplus cash,
+  and invested balance.
+- Upcoming expenses summary and short cash-flow forecast chart.
+- Recent transactions table/list.
+- AI insight panel explaining why a sweep is considered safe and what assumptions matter.
+- Concise product-value reminder so the prototype also works as a business showcase.
+
+D. CASH FLOW
+- Larger historical + forecast cash chart with legend and simulated-data annotation.
+- Forecast confidence/safety-buffer explanation without implying certainty.
+- Upcoming payment schedule with date, payee, category, and RM amount.
+- View controls (for example 30/60/90 days) that update the display.
+
+E. INVESTMENTS
+- Fictional Shariah-compliant money market fund portfolio (or Non-Shariah presentation
+  based on the demo login preference).
+- Invested amount, indicative annualised return, estimated earned return, liquidity note,
+  and risk/disclaimer copy.
+- Proposed sweep card showing source cash, reserve requirement, sweep amount, and projected
+  post-sweep liquidity.
+- Review modal/panel followed by explicit simulated confirmation and success feedback.
+- No real investment language and no guaranteed-return claim.
+
+F. TRANSACTIONS
+- Fictional records with date, description, type, status, and RM amount.
+- Working text search, type filter, status filter, and clear/reset action.
+- Responsive desktop table and mobile card presentation.
+- Useful no-results state.
+
+G. REPORTS
+- Monthly cash summary, investment summary, and simulated performance figures.
+- Lightweight comparison chart or bars generated from API data.
+- Month tabs/filter that update the displayed summary.
+- “Demo report” label and concise interpretation.
+
+H. INTEGRATIONS
+- Fictional bank and accounting-software connection cards.
+- Simulated connected/disconnected status, last sync time, and sync action.
+- Connect/disconnect or resync interaction with confirmation and clear prototype notice.
+- No credential collection and no claim of real connectivity.
+
+I. SETTINGS
+- Editable minimum cash reserve in RM with sensible validation.
+- Notification toggles for sweep proposals, forecast warnings, and weekly summaries.
+- Compliance preference display/update where appropriate.
+- Save interaction updates client-side UI only and confirms that no server record exists.
+
+
+4. VISUAL AND RESPONSIVE DIRECTION
+----------------------------------
+Visual thesis: “calm treasury control” — a crisp B2B financial workspace that makes risk,
+liquidity, and next actions understandable at a glance.
+
+- Palette: dark teal #0F766E as the primary brand/action colour, deep ink text, white cards,
+  light grey canvas, subtle borders, and restrained semantic colours for warnings/status.
+- Typography: clear system sans-serif stack, strong numeric hierarchy, readable body text.
+- Components: rounded cards, subtle borders/shadows, compact tags, consistent controls.
+- Accessibility: semantic landmarks, labels, visible focus states, keyboard-operable controls,
+  adequate colour contrast, reduced-motion respect, and text alternatives for charts.
+- Desktop: fixed/persistent sidebar and dense but breathable content grid.
+- Tablet/mobile: collapsible navigation, stacked cards, scroll-safe charts, touch-sized buttons,
+  and transaction cards or horizontally safe tables with no unintended page overflow.
+- Animation: only brief state transitions and feedback; no decorative motion dependency.
+
+
+5. IMPLEMENTATION WORKFLOW AND TODOS
+------------------------------------
+
+STAGE 0 — Scope and data contract
+[x] Read and synthesize the TunaiPintar business idea.
+[x] Translate the brief into architecture, views, system logic, and acceptance checks.
+[x] Finalise one internally consistent fictional Malaysian SME scenario.
+[x] Define exact API response fields and calculation relationships.
+[x] Decide the dates/forecast horizon used throughout the demo.
+
+Exit check: every displayed figure has one canonical JSON source or an explicit calculation.
+
+STAGE 1 — Project scaffold and backend
+[x] Create/complete the required folder and file structure.
+[x] Add Flask to requirements.txt with an appropriate version constraint.
+[x] Implement Flask static-file routes and GET /api/dashboard.
+[x] Add safe JSON loading and a useful API error response.
+[x] Populate backend/demo_data.json with coherent fictional data.
+[x] Optionally add GET /health for repeatable server verification.
+
+Exit check: one Flask command serves the homepage, CSS, JavaScript, assets, and API.
+
+STAGE 2 — Design system and application shell
+[x] Add document metadata, favicon/brand mark, tokens, typography, spacing, and component styles.
+[x] Build the demo login layout and form validation.
+[x] Implement Shariah / Non-Shariah choice and simulated session state.
+[x] Build the sidebar, mobile menu, top bar, badges, disclaimer, and logout.
+[x] Implement hash routing, active navigation states, and browser back/forward handling.
+[x] Add loading skeleton/state, global error panel, retry button, and toast/status feedback.
+
+Exit check: login, logout, navigation, responsive shell, and API failure recovery work.
+
+STAGE 3 — Dashboard product slice
+[x] Fetch /api/dashboard after demo login.
+[x] Render the four KPI cards using RM formatting.
+[x] Render the cash-flow preview chart and upcoming-expense summary.
+[x] Render recent transactions and the AI insight panel.
+[x] Add explicit demo/forecast labels and explain the business value in concise copy.
+
+Exit check: a first-time viewer can identify the problem, customer, solution, and benefit.
+
+STAGE 4 — Cash Flow and Investments
+[x] Build the expanded forecast chart and 30/60/90-day controls.
+[x] Build the upcoming payment schedule.
+[x] Build the fund portfolio and indicative-return summary.
+[x] Build proposed-sweep calculations and the safety-buffer explanation.
+[x] Implement review, cancel, and simulated confirm-sweep states.
+[x] Confirm all risk and non-guarantee language is visible at decision points.
+
+Exit check: the user can understand and complete the simulated sweep journey end to end.
+
+STAGE 5 — Transactions and Reports
+[x] Render all transaction records from API data.
+[x] Implement search, type/status filters, reset, result count, and no-results state.
+[x] Build monthly report cards and simulated performance chart.
+[x] Implement working month selection and updated interpretation text.
+
+Exit check: filters/tabs visibly change results without reloading the page.
+
+STAGE 6 — Integrations and Settings
+[x] Build fictional bank and accounting integration cards.
+[x] Implement simulated connect/disconnect/resync feedback without collecting credentials.
+[x] Build reserve input and notification controls.
+[x] Validate reserve input and update dependent client-side surplus/sweep figures if changed.
+[x] Implement a simulated save confirmation and reset behaviour.
+
+Exit check: prototype state changes are clear, reversible where appropriate, and never imply
+real persistence or external actions.
+
+STAGE 7 — Responsive and accessibility pass
+[ ] Verify layouts at representative mobile, tablet, and desktop widths.
+[ ] Test menu open/close, focus order, keyboard activation, modal focus, and Escape handling.
+[ ] Check labels, table/card transformations, chart descriptions, contrast, and 200% zoom.
+[x] Check long content, empty states, error states, and no horizontal page overflow.
+[x] Respect prefers-reduced-motion.
+
+Exit check: all primary journeys are usable with keyboard and at mobile width.
+
+STAGE 8 — Functional testing
+[x] Install dependencies in an isolated virtual environment.
+[x] Start the documented Flask command.
+[x] Verify GET / returns HTTP 200 and expected HTML.
+[x] Verify GET /api/dashboard returns HTTP 200 and valid demo JSON.
+[x] Verify unavailable demo data produces a helpful frontend message.
+[x] Test empty and valid login submissions plus the compliance selector.
+[x] Test logout and session reset.
+[ ] Test every sidebar destination and browser back/forward behaviour.
+[x] Test cash-flow range controls, sweep review/confirm, transaction filters,
+    report tabs, integration actions, settings validation, and save feedback.
+[x] Test at least one desktop and one mobile viewport using browser inspection.
+[x] Check the browser console for uncaught errors and failed assets.
+
+Exit check: actual results—not intended results—are recorded in README.md.
+
+STAGE 9 — Documentation and submission audit
+[x] Complete README.md with description, technology list, exact installation/start commands,
+    available routes, demo credentials behaviour, limitations, and troubleshooting.
+[x] Record actual test environment, commands, viewports, results, and any unresolved issues.
+[x] Record AI assistance accurately: planning, code/content generation, and test support;
+    note that the student reviewed and verified the result.
+[x] Ensure plan.txt reflects the implemented system and mark completed items accurately.
+[x] Confirm the exact required folder structure and remove accidental/generated clutter.
+[x] Run a clean-start test using only the README instructions.
+[x] Perform a final acceptance-criteria audit.
+
+Exit check: the project folder is self-contained and runnable by an evaluator.
+
+
+6. TEST MATRIX TO RECORD IN README.MD
+-------------------------------------
+- Server/homepage: URL, status, visible login content.
+- API: status, content type, required top-level keys, “Demo data” metadata.
+- Login: empty-field rejection, any non-empty values accepted, compliance choice retained.
+- Navigation: all seven views, active state, mobile menu, browser history.
+- Dashboard: API values render and RM formatting is consistent.
+- Cash Flow: chart/range updates and upcoming schedule renders.
+- Investments: review, cancel, confirm, and disclaimer visibility.
+- Transactions: search, filters, reset, and no-results state.
+- Reports: month selection and values/visualisation update.
+- Integrations: simulated status actions and no credential request.
+- Settings: invalid reserve rejected, valid reserve reflected, toggles and save feedback.
+- Failure handling: API unavailable/invalid response shows retry guidance.
+- Responsive: representative desktop and mobile viewport sizes.
+- Accessibility/basic quality: keyboard flow, focus visibility, labels, no console errors.
+
+
+7. DEMO LIMITATIONS TO DISCLOSE
+-------------------------------
+- No real authentication, password protection, user accounts, database, or server session.
+- No connection to banks, accounting platforms, payment rails, or investment providers.
+- No money is moved and no investment order is created.
+- All companies, balances, forecasts, transactions, returns, and AI insights are fictional.
+- Forecasts and returns are illustrative, not financial advice, and returns are not guaranteed.
+- User changes are temporary client-side prototype state and may reset on refresh/restart.
+- The forecasting/AI logic is represented by prepared demo data, not a trained production model.
+
+
+8. FINAL ACCEPTANCE CHECKLIST
+-----------------------------
+[x] project/frontend/index.html exists.
+[x] project/frontend/style.css exists.
+[x] project/frontend/script.js exists.
+[x] project/frontend/assets/ exists and contains only required assets (if any).
+[x] project/backend/app.py exists.
+[x] project/backend/demo_data.json exists and is valid JSON.
+[x] project/requirements.txt exists.
+[x] project/plan.txt exists.
+[x] project/README.md exists.
+[x] README instructions launch the site successfully through one Flask server.
+[x] Frontend demonstrably retrieves and displays /api/dashboard data.
+[x] Business problem, customers, value proposition, and benefits are immediately clear.
+[x] Every required section is accessible and meaningfully distinct.
+[x] All required interactions work and clearly remain simulated.
+[x] Desktop and mobile checks pass.
+[x] Actual testing and AI assistance are documented accurately.
