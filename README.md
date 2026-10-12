@@ -72,6 +72,32 @@ Use any validly formatted email address and any non-empty password. Choose eithe
 
 Stop the development server with `Ctrl+C`.
 
+## Deploy to Render
+
+This repository includes a `render.yaml` Blueprint for deployment as one Render
+web service. Flask serves both the frontend and the dashboard API, so a separate
+static-site service is not required.
+
+1. Push this `project` directory to a GitHub or GitLab repository.
+2. In Render, choose **New > Blueprint** and connect the repository.
+3. Review the detected `tunaipintar` web service and apply the Blueprint.
+4. After deployment, open the generated `onrender.com` URL. Render checks
+   `/health` before directing traffic to a new deployment.
+
+The Blueprint installs the dependencies from `requirements.txt` and starts the
+app with Gunicorn on Render's assigned `PORT`. Python 3.13 is selected through
+`.python-version`. No database, secrets, or other environment variables are
+required for this prototype.
+
+The same settings can be entered manually by creating a Python web service with
+the following values:
+
+```text
+Build command: pip install -r requirements.txt
+Start command: gunicorn backend.app:app --bind 0.0.0.0:$PORT
+Health check path: /health
+```
+
 ## Available routes
 
 - `GET /` — frontend application
