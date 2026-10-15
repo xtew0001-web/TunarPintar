@@ -251,6 +251,12 @@ main { max-width: 1500px; min-height: calc(100vh - 130px); margin: 0 auto; paddi
 .core-function-card strong { padding-right: 1.5rem; font-size: .78rem; }
 .core-function-card small { margin-top: .16rem; color: var(--muted); font-size: .62rem; line-height: 1.4; }
 .core-function-state { grid-column: 1 / -1; width: fit-content; padding: .24rem .42rem; color: var(--teal-800); background: var(--teal-50); border-radius: 999px; font-size: .58rem; font-weight: 750; }
+.liquidity-protection { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .8rem; margin-top: .8rem; padding: .8rem .9rem; color: var(--teal-950); background: rgba(255,255,255,.7); border: 1px solid #c9e2dd; border-radius: 12px; }
+.liquidity-protection-icon { display: grid; place-items: center; width: 30px; height: 30px; color: white; background: var(--teal-700); border-radius: 50%; font-size: .72rem; font-weight: 850; box-shadow: 0 0 0 5px rgba(13,148,136,.08); }
+.liquidity-protection strong { display: block; font-size: .72rem; }
+.liquidity-protection p { margin: .12rem 0 0; color: var(--muted); font-size: .63rem; line-height: 1.45; }
+.liquidity-protection a { color: var(--teal-800); font-size: .65rem; font-weight: 750; white-space: nowrap; }
+.liquidity-protection a:hover { text-decoration: underline; }
 .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(270px, .8fr); gap: 1rem; margin-bottom: 1rem; }
 .dashboard-grid--bottom { grid-template-columns: 1fr 1fr; }
 .dashboard-obligations { min-width: 0; }
@@ -651,6 +657,8 @@ td small { color: var(--muted); font-size: .62rem; }
   .core-loop { padding: .85rem; }
   .core-loop-head, .dashboard-section-head { align-items: flex-start; flex-direction: column; gap: .35rem; }
   .core-loop-status { display: none; }
+  .liquidity-protection { grid-template-columns: auto 1fr; }
+  .liquidity-protection a { grid-column: 2; }
   .welcome-row .button, .section-intro > .button, .section-intro > .simulation-pill { margin-top: 1rem; }
   .kpi-grid { grid-template-columns: 1fr 1fr; gap: .65rem; }
   .kpi-card { padding: .9rem; }
