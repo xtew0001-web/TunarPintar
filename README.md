@@ -14,18 +14,23 @@ The prototype is an educational business-idea showcase. It does not provide fina
 ## Technologies
 
 - Python 3 and Flask
+- Supabase Python client with a read-only seeded demo snapshot
 - HTML5
 - CSS3
 - Vanilla JavaScript
-- Local JSON demo data
+- Local JSON demo data as the default and automatic fallback
 - Inline SVG charts generated in the browser
 
-There is no database, frontend framework, charting package, external API, or real financial integration. One local Flask server serves both the frontend and API.
+Supabase is an optional hosted source for the same fictional JSON snapshot. It
+does not make the prototype a real financial system. There is no frontend
+framework, charting package, real authentication, bank connection, or real
+financial integration. One Flask server serves both the frontend and API.
 
 ## Project structure
 
 ```text
 project/
+├── .env.example
 ├── frontend/
 │   ├── index.html
 │   ├── style.css
@@ -34,7 +39,10 @@ project/
 │       └── favicon.svg
 ├── backend/
 │   ├── app.py
+│   ├── data_provider.py
 │   └── demo_data.json
+├── scripts/
+│   └── seed_supabase.py
 ├── requirements.txt
 ├── plan.txt
 └── README.md
@@ -50,6 +58,12 @@ From the `project` directory:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+```
+
+Copy the environment template before configuring Supabase:
+
+```bash
+cp .env.example .env
 ```
 
 On Windows PowerShell, activate the environment with:
@@ -72,6 +86,47 @@ Use any validly formatted email address and any non-empty password. Choose eithe
 
 Stop the development server with `Ctrl+C`.
 
+## Optional Supabase demo data
+
+The app uses `backend/demo_data.json` unless `DATA_SOURCE=supabase` is set.
+Supabase stores one read-only copy of the same fictional dataset in the
+`demo_snapshots` table. If the Supabase request fails, Flask logs the error and
+returns the local JSON automatically.
+
+After creating the table and Row Level Security policy, open the Supabase
+project's **Connect** dialog to copy the project URL and publishable key. All
+keys can also be found under **Settings > API Keys**. Put the values in `.env`:
+
+```text
+DATA_SOURCE=json
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+SUPABASE_SECRET_KEY=sb_secret_your_key
+SUPABASE_DEMO_SLUG=nusantara-supply
+```
+
+The publishable key is used by the running Flask app and remains restricted by
+the table's Row Level Security policy. The secret key bypasses Row Level
+Security and is used only to seed the fictional dataset locally. Never expose
+the secret key in frontend code, commit `.env`, or add the secret key to Render.
+
+Seed or refresh the hosted snapshot:
+
+```bash
+python scripts/seed_supabase.py
+```
+
+After that succeeds, change `DATA_SOURCE` in `.env` to `supabase`, restart
+Flask, and reload the app. You can remove `SUPABASE_SECRET_KEY` from `.env`
+after seeding. To confirm the source, inspect the `/api/dashboard` response
+header:
+
+```bash
+curl -I http://127.0.0.1:5000/api/dashboard
+```
+
+It reports `X-Demo-Data-Source: supabase`, `json`, or `json-fallback`.
+
 ## Deploy to Render
 
 This repository includes a `render.yaml` Blueprint for deployment as one Render
@@ -86,8 +141,20 @@ static-site service is not required.
 
 The Blueprint installs the dependencies from `requirements.txt` and starts the
 app with Gunicorn on Render's assigned `PORT`. Python 3.13 is selected through
-`.python-version`. No database, secrets, or other environment variables are
-required for this prototype.
+`.python-version`. The service works without environment variables by using
+the local JSON dataset.
+
+To use Supabase on Render, add only these environment variables to the web
+service:
+
+```text
+DATA_SOURCE=supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+SUPABASE_DEMO_SLUG=nusantara-supply
+```
+
+Do not add `SUPABASE_SECRET_KEY` to Render.
 
 The same settings can be entered manually by creating a Python web service with
 the following values:
@@ -101,8 +168,8 @@ Health check path: /health
 ## Available routes
 
 - `GET /` — frontend application
-- `GET /api/dashboard` — fictional dashboard data from `backend/demo_data.json`
-- `GET /health` — small local server health response
+- `GET /api/dashboard` — fictional dashboard data from JSON or Supabase
+- `GET /health` — service status and configured data source
 - `/style.css`, `/script.js`, and `/assets/...` — frontend resources
 
 The seven workspace destinations use URL hashes such as `#cash-flow` and `#investments`. They are distinct views inside the same browser application and remain served by the single Flask server.
@@ -127,7 +194,10 @@ The seven workspace destinations use URL hashes such as `#cash-flow` and `#inves
 
 ## Data and system logic
 
-All canonical demo values are stored in `backend/demo_data.json`. Flask reads this file for each `GET /api/dashboard` request. JavaScript fetches the response and renders the views.
+All canonical demo values are stored in `backend/demo_data.json`. The seed
+script copies the complete object to the Supabase `demo_snapshots.payload`
+column. Flask reads the configured provider for each `GET /api/dashboard`
+request, while JavaScript receives the same response structure in either mode.
 
 The primary prototype calculation is:
 
@@ -144,7 +214,8 @@ Changing settings, confirming a sweep, connecting an integration, or choosing no
 - All company names, accounts, balances, invoices, payments, funds, returns, forecasts, reports, and AI insights are fictional.
 - The login uses `sessionStorage` as a display convenience. It is not authentication and should never be used for a real system.
 - No password is sent to or stored by the Flask backend.
-- There is no database or server-side user persistence.
+- Supabase contains only a seeded copy of the fictional starting dataset; there
+  is no server-side user persistence.
 - There is no connection to a bank, accounting platform, payment rail, fund manager, or licensed investment provider.
 - No money is moved, and no investment order is created or redeemed.
 - The “AI” insight and forecast are prepared demo data, not the output of a trained production model.
@@ -213,6 +284,7 @@ The project owner should review the source, calculations, wording, test record, 
 ## Troubleshooting
 
 - **`ModuleNotFoundError: No module named 'flask'`** — activate the virtual environment and run `python -m pip install -r requirements.txt`.
-- **Port 5000 is already in use** — stop the other local process using the port, then rerun `python backend/app.py`.
+- **Port 5000 is already in use** — stop the other process or run `python -m flask --app backend.app run --port 5001`.
 - **“We could not load the demo data”** — confirm the Flask server is running and validate `backend/demo_data.json` as JSON.
+- **Supabase silently falls back to JSON** — check the Flask log, confirm `DATA_SOURCE=supabase`, verify the project URL and publishable key, and confirm the seeded row uses the expected slug.
 - **Settings reset after refresh** — this is expected. Prototype changes are intentionally browser-only and temporary.
