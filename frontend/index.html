@@ -161,13 +161,22 @@
           <div id="workspace" hidden>
             <section class="view active" id="view-dashboard" data-view-panel="dashboard" aria-labelledby="dashboard-heading">
               <div class="welcome-row">
-                <div><span class="eyebrow">Sunday, 4 October</span><h2 id="dashboard-heading">Good morning, Nusantara Supply</h2><p>Here is the latest view of your liquidity and simulated treasury opportunity.</p></div>
-                <a class="button button--primary" href="#investments">Review proposed sweep</a>
+                <div><span class="eyebrow">Sunday, 4 October</span><h2 id="dashboard-heading">Good morning, Nusantara Supply</h2><p>Your forecast, surplus-cash decision and liquidity protection are shown as one connected treasury loop.</p></div>
+                <span class="workspace-status"><i aria-hidden="true"></i> Treasury guardrails active</span>
               </div>
 
-              <div class="kpi-grid" id="kpi-grid"></div>
+              <article class="treasury-decision" id="treasury-decision" aria-label="Today's treasury decision"></article>
 
-              <div class="core-function-grid" id="core-functions" aria-label="TunaiPintar core functions"></div>
+              <section class="core-loop" aria-labelledby="core-loop-title">
+                <div class="core-loop-head">
+                  <div><span class="section-label">Core operating loop</span><h3 id="core-loop-title">Monitor. Put surplus to work. Protect liquidity.</h3></div>
+                  <span class="core-loop-status">Live demo state</span>
+                </div>
+                <div class="core-function-grid" id="core-functions" aria-label="TunaiPintar core functions"></div>
+              </section>
+
+              <div class="dashboard-section-head"><div><span class="section-label">Liquidity snapshot</span><h3>The numbers behind today's decision</h3></div><span>All figures are simulated</span></div>
+              <div class="kpi-grid" id="kpi-grid"></div>
 
               <div class="dashboard-grid">
                 <article class="card chart-card dashboard-chart-card">
@@ -175,14 +184,14 @@
                   <div id="dashboard-chart" class="chart-wrap"></div>
                   <div class="chart-footer" id="dashboard-chart-footer"></div>
                 </article>
-                <aside class="insight-panel" id="dashboard-insight"></aside>
+                <article class="card dashboard-obligations">
+                  <div class="card-head"><div><span class="section-label">Next 30 days</span><h3>Upcoming obligations</h3></div><a href="#cash-flow" class="text-link">Full forecast</a></div>
+                  <div id="upcoming-mini" class="item-list"></div>
+                </article>
               </div>
 
               <div class="dashboard-grid dashboard-grid--bottom">
-                <article class="card">
-                  <div class="card-head"><div><span class="section-label">Next 30 days</span><h3>Upcoming expenses</h3></div><a href="#cash-flow" class="text-link">View forecast</a></div>
-                  <div id="upcoming-mini" class="item-list"></div>
-                </article>
+                <aside class="insight-panel" id="dashboard-insight"></aside>
                 <article class="card">
                   <div class="card-head"><div><span class="section-label">Latest activity</span><h3>Recent transactions</h3></div><a href="#transactions" class="text-link">View all</a></div>
                   <div id="recent-transactions" class="item-list"></div>
