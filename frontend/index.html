@@ -161,22 +161,10 @@
           <div id="workspace" hidden>
             <section class="view active" id="view-dashboard" data-view-panel="dashboard" aria-labelledby="dashboard-heading">
               <div class="welcome-row">
-                <div><span class="eyebrow">Sunday, 4 October</span><h2 id="dashboard-heading">Good morning, Nusantara Supply</h2><p>TunaiPintar forecasts cash, moves safe surplus and brings funds back when liquidity needs change.</p></div>
-                <span class="workspace-status"><i aria-hidden="true"></i> Cash autopilot monitoring</span>
+                <div><span class="eyebrow">Sunday, 4 October</span><h2 id="dashboard-heading">Good morning, Nusantara Supply</h2><p>Here is the latest view of your liquidity and simulated treasury opportunity.</p></div>
+                <a class="button button--primary" href="#investments">Review proposed sweep</a>
               </div>
 
-              <article class="treasury-decision" id="treasury-decision" aria-label="Today's treasury decision"></article>
-
-              <section class="core-loop" aria-labelledby="core-loop-title">
-                <div class="core-loop-head">
-                  <div><span class="section-label">AI cash autopilot</span><h3 id="core-loop-title">Forecast. Sweep. Pull back.</h3></div>
-                  <span class="core-loop-status">Monitoring continuously</span>
-                </div>
-                <div class="core-function-grid" id="core-functions" aria-label="TunaiPintar core functions"></div>
-                <div class="liquidity-protection" id="liquidity-protection"></div>
-              </section>
-
-              <div class="dashboard-section-head"><div><span class="section-label">Liquidity snapshot</span><h3>The numbers behind today's decision</h3></div><span>All figures are simulated</span></div>
               <div class="kpi-grid" id="kpi-grid"></div>
 
               <div class="dashboard-grid">
@@ -185,14 +173,14 @@
                   <div id="dashboard-chart" class="chart-wrap"></div>
                   <div class="chart-footer" id="dashboard-chart-footer"></div>
                 </article>
-                <article class="card dashboard-obligations">
-                  <div class="card-head"><div><span class="section-label">Next 30 days</span><h3>Upcoming obligations</h3></div><a href="#cash-flow" class="text-link">Full forecast</a></div>
-                  <div id="upcoming-mini" class="item-list"></div>
-                </article>
+                <aside class="insight-panel" id="dashboard-insight"></aside>
               </div>
 
               <div class="dashboard-grid dashboard-grid--bottom">
-                <aside class="insight-panel" id="dashboard-insight"></aside>
+                <article class="card">
+                  <div class="card-head"><div><span class="section-label">Next 30 days</span><h3>Upcoming expenses</h3></div><a href="#obligations" class="text-link">View forecast</a></div>
+                  <div id="upcoming-mini" class="item-list"></div>
+                </article>
                 <article class="card">
                   <div class="card-head"><div><span class="section-label">Latest activity</span><h3>Recent transactions</h3></div><a href="#transactions" class="text-link">View all</a></div>
                   <div id="recent-transactions" class="item-list"></div>
@@ -218,13 +206,13 @@
                 <p class="chart-caption">Solid line shows recorded demo balances; dashed line shows simulated forecast values. Forecasts may differ from actual outcomes.</p>
               </article>
               <div class="content-grid">
-                <article class="card span-2">
+                <article class="card span-2" id="obligations-panel">
                   <div class="card-head"><div><span class="section-label">Payment schedule</span><h3>Upcoming obligations</h3></div><span class="subtle-text" id="expense-total"></span></div>
                   <div class="schedule-list" id="payment-schedule"></div>
                 </article>
                 <aside class="card forecast-method">
                   <span class="feature-icon" aria-hidden="true">⌁</span>
-                  <span class="section-label">How this estimate works</span>
+                  <span class="section-label">Core function 01 · AI cash forecasting</span>
                   <h3>An adaptive view of available cash</h3>
                   <p>The recommendation is recalculated whenever a new payment, changed due date or updated balance affects liquidity. It protects obligations, the reserve and an uncertainty buffer before proposing a sweep.</p>
                   <ul><li>New and floating payments reduce the proposal</li><li>Reserve and uncertainty buffer stay protected</li><li>Every sweep remains reviewable before placement</li></ul>

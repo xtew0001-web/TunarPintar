@@ -256,7 +256,7 @@ function renderAll() {
 function routeFromHash() {
   if ($("#app").hidden || !state.data) return;
   const requested = window.location.hash.replace("#", "") || "dashboard";
-  const view = PAGE_META[requested] ? requested : "dashboard";
+  const view = requested === "obligations" ? "cash-flow" : PAGE_META[requested] ? requested : "dashboard";
   $$("[data-view-panel]").forEach((panel) => panel.classList.toggle("active", panel.dataset.viewPanel === view));
   $$(".sidebar-nav [data-view]").forEach((link) => {
     const active = link.dataset.view === view;
@@ -270,7 +270,8 @@ function routeFromHash() {
   $("#page-kicker").textContent = PAGE_META[view][1];
   document.title = `${PAGE_META[view][0]} — TunaiPintar Demo`;
   closeSidebar();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (requested === "obligations") requestAnimationFrame(() => $("#obligations-panel").scrollIntoView({ block: "start" }));
+  else window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function renderDashboard() {
@@ -278,65 +279,17 @@ function renderDashboard() {
   const data = state.data;
   const sweep = getSweepFigures();
   const pullBack = getPullBackFigures();
-  const scenarioActive = state.unexpectedPayment > 0;
-  const decisionTitle = state.sweepConfirmed
-    ? "Sweep simulation recorded"
-    : state.pullBackActive
-      ? "Protective pull back is in progress"
-      : scenarioActive
-        ? `${rm(sweep.amount)} remains available after the new payment`
-        : `${rm(sweep.amount)} may be available to put to work`;
-  const decisionMessage = state.sweepConfirmed
-    ? "The demo decision is complete for this browser session. No funds moved and the original data remains unchanged."
-    : state.pullBackActive
-      ? `${rm(pullBack.amount)} is returning to operating cash while new sweeps are paused.`
-      : scenarioActive
-        ? `The recommendation was reduced from ${rm(sweep.baseAmount)} after protecting a new ${rm(sweep.pendingPayment)} supplier payment.`
-        : `Known obligations, your ${rm(state.reserve)} reserve and an ${rm(sweep.buffer)} uncertainty buffer remain protected.`;
-  $("#treasury-decision").innerHTML = `
-    <div class="decision-main">
-      <div class="decision-status"><span><i aria-hidden="true"></i>${state.pullBackActive ? "Liquidity protection active" : "Adaptive recommendation"}</span><small>Recalculated ${state.recommendationLastUpdated}</small></div>
-      <span class="eyebrow eyebrow--light">Today's treasury decision · Simulated</span>
-      <h3>${decisionTitle}</h3>
-      <p>${decisionMessage}</p>
-      <div class="decision-signals"><span>Confidence: ${data.cash_flow.confidence}</span><span>${getUpcomingExpenses().length} obligations reviewed</span><span>${data.investment.liquidity}</span></div>
-      <div class="decision-actions"><a class="button button--decision" href="#investments">${state.pullBackActive ? "View liquidity protection" : state.sweepConfirmed ? "View simulation" : "Review proposed sweep"}</a><a class="decision-link" href="#cash-flow">Explore 30-day forecast <span aria-hidden="true">→</span></a></div>
-    </div>
-    <div class="decision-breakdown">
-      <div class="decision-breakdown-head"><span>How cash is protected</span><strong>${rm(sweep.current)} total cash</strong></div>
-      <div class="decision-allocation" aria-label="Current cash protection breakdown">
-        <span class="decision-reserve" style="width:${(state.reserve / sweep.current) * 100}%"></span>
-        <span class="decision-buffer" style="width:${(sweep.buffer / sweep.current) * 100}%"></span>
-        ${scenarioActive ? `<span class="decision-payment" style="width:${(sweep.pendingPayment / sweep.current) * 100}%"></span>` : ""}
-        <span class="decision-sweep" style="width:${(sweep.amount / sweep.current) * 100}%"></span>
-      </div>
-      <dl class="decision-metrics">
-        <div><dt>Protected reserve</dt><dd>${rm(state.reserve)}</dd></div>
-        <div><dt>${scenarioActive ? "Buffer after new payment" : "Uncertainty buffer"}</dt><dd>${rm(sweep.buffer)}</dd></div>
-        <div><dt>Cash after proposed sweep</dt><dd>${rm(sweep.postSweep)}</dd></div>
-        <div class="decision-metric-accent"><dt>${state.pullBackActive ? "New sweep" : "Recommended sweep"}</dt><dd>${rm(sweep.amount)}</dd></div>
-      </dl>
-      <p class="decision-reason">${state.recommendationReason}</p>
-    </div>`;
-  $("#core-functions").innerHTML = `
-    <a class="core-function-card core-function-card--monitor" href="#cash-flow"><span class="core-function-number">01</span><span class="core-function-icon" aria-hidden="true">⌁</span><div><strong>AI Forecast</strong><small>Projects cash needs from balances, inflows and upcoming bills.</small></div><span class="core-function-state">${state.unexpectedPayment ? "Forecast updated" : "30-day view ready"}</span></a>
-    <a class="core-function-card core-function-card--sweep" href="#investments"><span class="core-function-number">02</span><span class="core-function-icon" aria-hidden="true">↗</span><div><strong>Auto Sweep</strong><small>Moves only forecast-safe surplus after your buffer is protected.</small></div><span class="core-function-state">${state.pullBackActive ? "Paused for liquidity" : `${rm(sweep.amount)} ready to review`}</span></a>
-    <a class="core-function-card core-function-card--protect" href="#investments"><span class="core-function-number">03</span><span class="core-function-icon" aria-hidden="true">↙</span><div><strong>Auto Pullback</strong><small>Returns funds before obligations when cash approaches the buffer.</small></div><span class="core-function-state">${state.pullBackActive ? `${rm(pullBack.amount)} returning` : `Watching ${rm(state.reserve + sweep.buffer)} buffer`}</span></a>`;
-  const protectedLiquidity = state.reserve + sweep.buffer;
-  $("#liquidity-protection").innerHTML = `
-    <span class="liquidity-protection-icon" aria-hidden="true">✓</span>
-    <div><strong>${state.pullBackActive ? "Liquidity buffer being restored" : "Liquidity buffer protected"}</strong><p>${state.pullBackActive ? `Auto Pullback is returning ${rm(pullBack.amount)} before the new obligation is due.` : `${rm(protectedLiquidity)} remains liquid after each sweep, covering your reserve and forecast uncertainty.`}</p></div>
-    <a href="#cash-flow">View breakdown <span aria-hidden="true">→</span></a>`;
   const points = getAdjustedCashFlowPoints().slice(0, 8);
   const forecastLow = Math.min(...points.filter((point) => point.kind === "forecast").map((point) => point.value));
   $("#dashboard-chart").innerHTML = buildLineChart(points, "dashboard-gradient", state.reserve, 245);
   $("#dashboard-chart-footer").innerHTML = `<span>Forecast low <strong>${rm(forecastLow)}</strong></span><span>Minimum reserve <strong>${rm(state.reserve)}</strong></span><span>Confidence <strong>${data.cash_flow.confidence}</strong></span>`;
 
   const insight = data.insights[0];
+  const scenarioActive = state.unexpectedPayment > 0;
   $("#dashboard-insight").innerHTML = `
     <div class="insight-head"><span class="ai-label">AI insight · Simulated</span><a class="ai-orb" href="#investments" aria-label="Review the AI treasury recommendation" title="Review recommendation">✦</a></div>
     <h3>${state.sweepConfirmed ? "Simulated sweep recorded" : state.pullBackActive ? `${rm(pullBack.amount)} automatic pull back initiated` : scenarioActive ? `Recommendation reduced to ${rm(sweep.amount)}` : insight.title}</h3>
-    <p>${state.sweepConfirmed ? "Your demo activity has been updated for this browser session. No money moved and the source JSON was not changed." : state.pullBackActive ? `The liquidity guardrail paused new sweeps and started a simulated T+1 redemption from the invested balance.` : scenarioActive ? `A new ${rm(state.unexpectedPayment)} supplier payment was detected. The proposed sweep was recalculated while protecting the reserve and retained buffer.` : insight.message}</p>
+    <p>${state.sweepConfirmed ? "Your demo activity has been updated for this browser session. No money moved and the source JSON was not changed." : state.pullBackActive ? "The liquidity guardrail paused new sweeps and started a simulated T+1 redemption from the invested balance." : scenarioActive ? `A new ${rm(state.unexpectedPayment)} supplier payment was detected. The proposed sweep was recalculated while protecting the reserve and retained buffer.` : insight.message}</p>
     <div class="insight-metric"><span>Retained buffer<br><strong>${rm(sweep.buffer)}</strong></span><span>30-day obligations<br><strong>${rm(sumExpenses())}</strong></span><span>Recalculated<br><strong>${state.recommendationLastUpdated}</strong></span></div>`;
 
   $("#upcoming-mini").innerHTML = getUpcomingExpenses().slice(0, 3).map((expense) => `
@@ -454,7 +407,7 @@ function renderInvestments() {
   $("#sweep-card").innerHTML = `
     <div class="sweep-copy">
       <div class="recommendation-status"><span class="live-status"><i aria-hidden="true"></i> Adaptive recommendation</span><span>Last recalculated <strong>${state.recommendationLastUpdated}</strong></span></div>
-      <span class="section-label">AI recommendation · Simulated</span>
+      <span class="section-label">Core function 02 · Smart auto sweep</span>
       <h3>${state.sweepConfirmed ? "Sweep simulation complete" : state.pullBackActive ? "New auto sweeps paused for liquidity" : `${rm(sweep.amount)} may be available to sweep`}</h3>
       <p>${state.sweepConfirmed ? "This browser-only confirmation did not move funds or create an investment order. Refreshing the demo restores the original proposal." : state.pullBackActive ? "The liquidity guardrail temporarily stopped new placements while an automatic pull back is processing." : `The model protects your ${rm(state.reserve)} reserve, known obligations and a ${rm(sweep.buffer)} uncertainty buffer before recommending an investment amount.`}</p>
       ${scenarioActive ? `<div class="recommendation-change" role="status"><strong>${state.pullBackActive ? "Auto sweep paused" : "Recommendation updated"}</strong><span>${state.pullBackActive ? `A new ${rm(sweep.pendingPayment)} payment activated the pull-back rule, so no additional cash will be invested.` : `A new ${rm(sweep.pendingPayment)} supplier payment reduced the proposed sweep from ${rm(sweep.baseAmount)} to ${rm(sweep.amount)}.`}</span></div>` : ""}
