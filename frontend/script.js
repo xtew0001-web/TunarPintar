@@ -256,7 +256,7 @@ function renderAll() {
 function routeFromHash() {
   if ($("#app").hidden || !state.data) return;
   const requested = window.location.hash.replace("#", "") || "dashboard";
-  const view = PAGE_META[requested] ? requested : "dashboard";
+  const view = requested === "obligations" ? "cash-flow" : PAGE_META[requested] ? requested : "dashboard";
   $$("[data-view-panel]").forEach((panel) => panel.classList.toggle("active", panel.dataset.viewPanel === view));
   $$(".sidebar-nav [data-view]").forEach((link) => {
     const active = link.dataset.view === view;
@@ -270,7 +270,8 @@ function routeFromHash() {
   $("#page-kicker").textContent = PAGE_META[view][1];
   document.title = `${PAGE_META[view][0]} — TunaiPintar Demo`;
   closeSidebar();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (requested === "obligations") requestAnimationFrame(() => $("#obligations-panel").scrollIntoView({ block: "start" }));
+  else window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function renderDashboard() {
@@ -278,10 +279,6 @@ function renderDashboard() {
   const data = state.data;
   const sweep = getSweepFigures();
   const pullBack = getPullBackFigures();
-  $("#core-functions").innerHTML = `
-    <a class="core-function-card" href="#cash-flow"><span class="core-function-number">01</span><span class="core-function-icon" aria-hidden="true">⌁</span><div><strong>AI cash forecasting</strong><small>Continuously reviews balances, obligations and changing payment dates.</small></div><span class="core-function-state">${state.unexpectedPayment ? "Forecast updated" : "30-day view ready"}</span></a>
-    <a class="core-function-card" href="#investments"><span class="core-function-number">02</span><span class="core-function-icon" aria-hidden="true">↗</span><div><strong>Smart auto sweep</strong><small>Suggests investable cash only after the reserve and buffer are protected.</small></div><span class="core-function-state">${state.pullBackActive ? "Paused for liquidity" : `${rm(sweep.amount)} proposed`}</span></a>
-    <a class="core-function-card" href="#investments"><span class="core-function-number">03</span><span class="core-function-icon" aria-hidden="true">↙</span><div><strong>Automatic pull back</strong><small>Returns invested cash when the forecast detects a liquidity risk.</small></div><span class="core-function-state">${state.pullBackActive ? `${rm(pullBack.amount)} processing` : "T+1 protection ready"}</span></a>`;
   const points = getAdjustedCashFlowPoints().slice(0, 8);
   const forecastLow = Math.min(...points.filter((point) => point.kind === "forecast").map((point) => point.value));
   $("#dashboard-chart").innerHTML = buildLineChart(points, "dashboard-gradient", state.reserve, 245);
@@ -292,7 +289,7 @@ function renderDashboard() {
   $("#dashboard-insight").innerHTML = `
     <div class="insight-head"><span class="ai-label">AI insight · Simulated</span><a class="ai-orb" href="#investments" aria-label="Review the AI treasury recommendation" title="Review recommendation">✦</a></div>
     <h3>${state.sweepConfirmed ? "Simulated sweep recorded" : state.pullBackActive ? `${rm(pullBack.amount)} automatic pull back initiated` : scenarioActive ? `Recommendation reduced to ${rm(sweep.amount)}` : insight.title}</h3>
-    <p>${state.sweepConfirmed ? "Your demo activity has been updated for this browser session. No money moved and the source JSON was not changed." : state.pullBackActive ? `The liquidity guardrail paused new sweeps and started a simulated T+1 redemption from the invested balance.` : scenarioActive ? `A new ${rm(state.unexpectedPayment)} supplier payment was detected. The proposed sweep was recalculated while protecting the reserve and retained buffer.` : insight.message}</p>
+    <p>${state.sweepConfirmed ? "Your demo activity has been updated for this browser session. No money moved and the source JSON was not changed." : state.pullBackActive ? "The liquidity guardrail paused new sweeps and started a simulated T+1 redemption from the invested balance." : scenarioActive ? `A new ${rm(state.unexpectedPayment)} supplier payment was detected. The proposed sweep was recalculated while protecting the reserve and retained buffer.` : insight.message}</p>
     <div class="insight-metric"><span>Retained buffer<br><strong>${rm(sweep.buffer)}</strong></span><span>30-day obligations<br><strong>${rm(sumExpenses())}</strong></span><span>Recalculated<br><strong>${state.recommendationLastUpdated}</strong></span></div>`;
 
   $("#upcoming-mini").innerHTML = getUpcomingExpenses().slice(0, 3).map((expense) => `
@@ -410,7 +407,7 @@ function renderInvestments() {
   $("#sweep-card").innerHTML = `
     <div class="sweep-copy">
       <div class="recommendation-status"><span class="live-status"><i aria-hidden="true"></i> Adaptive recommendation</span><span>Last recalculated <strong>${state.recommendationLastUpdated}</strong></span></div>
-      <span class="section-label">AI recommendation · Simulated</span>
+      <span class="section-label">Core function 02 · Smart auto sweep</span>
       <h3>${state.sweepConfirmed ? "Sweep simulation complete" : state.pullBackActive ? "New auto sweeps paused for liquidity" : `${rm(sweep.amount)} may be available to sweep`}</h3>
       <p>${state.sweepConfirmed ? "This browser-only confirmation did not move funds or create an investment order. Refreshing the demo restores the original proposal." : state.pullBackActive ? "The liquidity guardrail temporarily stopped new placements while an automatic pull back is processing." : `The model protects your ${rm(state.reserve)} reserve, known obligations and a ${rm(sweep.buffer)} uncertainty buffer before recommending an investment amount.`}</p>
       ${scenarioActive ? `<div class="recommendation-change" role="status"><strong>${state.pullBackActive ? "Auto sweep paused" : "Recommendation updated"}</strong><span>${state.pullBackActive ? `A new ${rm(sweep.pendingPayment)} payment activated the pull-back rule, so no additional cash will be invested.` : `A new ${rm(sweep.pendingPayment)} supplier payment reduced the proposed sweep from ${rm(sweep.baseAmount)} to ${rm(sweep.amount)}.`}</span></div>` : ""}

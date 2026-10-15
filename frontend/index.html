@@ -167,8 +167,6 @@
 
               <div class="kpi-grid" id="kpi-grid"></div>
 
-              <div class="core-function-grid" id="core-functions" aria-label="TunaiPintar core functions"></div>
-
               <div class="dashboard-grid">
                 <article class="card chart-card dashboard-chart-card">
                   <div class="card-head"><div><span class="section-label">Cash visibility</span><h3>Cash position and forecast</h3></div><span class="forecast-key"><i></i> Forecast</span></div>
@@ -180,7 +178,7 @@
 
               <div class="dashboard-grid dashboard-grid--bottom">
                 <article class="card">
-                  <div class="card-head"><div><span class="section-label">Next 30 days</span><h3>Upcoming expenses</h3></div><a href="#cash-flow" class="text-link">View forecast</a></div>
+                  <div class="card-head"><div><span class="section-label">Next 30 days</span><h3>Upcoming expenses</h3></div><a href="#obligations" class="text-link">View forecast</a></div>
                   <div id="upcoming-mini" class="item-list"></div>
                 </article>
                 <article class="card">
@@ -208,13 +206,13 @@
                 <p class="chart-caption">Solid line shows recorded demo balances; dashed line shows simulated forecast values. Forecasts may differ from actual outcomes.</p>
               </article>
               <div class="content-grid">
-                <article class="card span-2">
+                <article class="card span-2" id="obligations-panel">
                   <div class="card-head"><div><span class="section-label">Payment schedule</span><h3>Upcoming obligations</h3></div><span class="subtle-text" id="expense-total"></span></div>
                   <div class="schedule-list" id="payment-schedule"></div>
                 </article>
                 <aside class="card forecast-method">
                   <span class="feature-icon" aria-hidden="true">⌁</span>
-                  <span class="section-label">How this estimate works</span>
+                  <span class="section-label">Core function 01 · AI cash forecasting</span>
                   <h3>An adaptive view of available cash</h3>
                   <p>The recommendation is recalculated whenever a new payment, changed due date or updated balance affects liquidity. It protects obligations, the reserve and an uncertainty buffer before proposing a sweep.</p>
                   <ul><li>New and floating payments reduce the proposal</li><li>Reserve and uncertainty buffer stay protected</li><li>Every sweep remains reviewable before placement</li></ul>
