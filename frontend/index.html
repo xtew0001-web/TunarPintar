@@ -21,25 +21,25 @@
         <div class="story-content">
           <span class="eyebrow eyebrow--light">AI-powered SME treasury</span>
           <h1 id="login-title">Turn idle business cash into <span>smarter returns.</span></h1>
-          <p class="story-lead">Turn idle business cash into low-risk return opportunities while protecting the liquidity needed for obligations.</p>
+          <p class="story-lead">Review a clear, educational view of business investments, fund allocation, indicative returns and liquidity.</p>
           <div class="capability-grid" aria-label="Treasury capabilities">
             <article tabindex="0">
               <span class="capability-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 3 7-8M16 7h4v4"/></svg>
               </span>
-              <div><h2>AI cash forecasting</h2><p>Understand expected inflows, outflows and upcoming obligations.</p></div>
+              <div><h2>Portfolio overview</h2><p>See the current holding, indicative return and estimated monthly performance.</p></div>
             </article>
             <article tabindex="0">
               <span class="capability-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-2.8 7.7-7 10-4.2-2.3-7-5.5-7-10V6l7-3zM9 12l2 2 4-4"/></svg>
               </span>
-              <div><h2>Smart auto-sweep</h2><p>Allocate only the surplus remaining after obligations and reserves.</p></div>
+              <div><h2>Fund allocation</h2><p>Understand how the example money market portfolio is composed.</p></div>
             </article>
             <article tabindex="0">
               <span class="capability-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m6 13v-6m5 6V3M2 21h20"/></svg>
               </span>
-              <div><h2>Automatic pull-back</h2><p>Schedule funds to return before upcoming business payments.</p></div>
+              <div><h2>Liquidity and risk</h2><p>Review redemption timing and important risk information before making decisions.</p></div>
             </article>
           </div>
         </div>
@@ -162,7 +162,7 @@
             <section class="view active" id="view-dashboard" data-view-panel="dashboard" aria-labelledby="dashboard-heading">
               <div class="welcome-row">
                 <div><span class="eyebrow">Sunday, 4 October</span><h2 id="dashboard-heading">Good morning, Nusantara Supply</h2><p>Here is the latest view of your liquidity and simulated treasury opportunity.</p></div>
-                <a class="button button--primary" href="#investments">Review proposed sweep</a>
+                <a class="button button--primary" href="#investments">View investment portfolio</a>
               </div>
 
               <div class="kpi-grid" id="kpi-grid"></div>
@@ -214,14 +214,14 @@
                   <span class="feature-icon" aria-hidden="true">⌁</span>
                   <span class="section-label">Core function 01 · AI cash forecasting</span>
                   <h3>An adaptive view of available cash</h3>
-                  <p>The recommendation is recalculated whenever a new payment, changed due date or updated balance affects liquidity. It protects obligations, the reserve and an uncertainty buffer before proposing a sweep.</p>
-                  <ul><li>New and floating payments reduce the proposal</li><li>Reserve and uncertainty buffer stay protected</li><li>Every sweep remains reviewable before placement</li></ul>
+                  <p>The forecast updates when a new payment, changed due date or updated balance affects liquidity. It helps the business understand upcoming obligations while keeping the portfolio view separate.</p>
+                  <ul><li>New and floating payments update the outlook</li><li>Reserve and uncertainty buffer stay visible</li><li>Investment holdings remain informational</li></ul>
                 </aside>
               </div>
             </section>
 
             <section class="view" id="view-investments" data-view-panel="investments" aria-labelledby="investments-heading">
-              <div class="section-intro"><div><span class="eyebrow">Surplus cash</span><h2 id="investments-heading">Review your simulated portfolio</h2><p>Indicative fund information and cash-sweep recommendations for learning purposes only.</p></div><span class="simulation-pill" id="compliance-badge">Shariah preference</span></div>
+              <div class="section-intro"><div><span class="eyebrow">Investment portfolio</span><h2 id="investments-heading">Review your simulated portfolio</h2><p>See the example holding, fund composition, indicative return and liquidity information in one focused view.</p></div><span class="simulation-pill" id="compliance-badge">Shariah preference</span></div>
               <div class="investment-grid">
                 <article class="card portfolio-card" id="portfolio-card"></article>
                 <article class="card allocation-card">
@@ -229,8 +229,17 @@
                   <div class="donut-layout"><div class="donut" id="allocation-donut"><span>100%<small>allocated</small></span></div><div id="allocation-legend" class="allocation-legend"></div></div>
                 </article>
               </div>
-              <article class="sweep-card" id="sweep-card"></article>
-              <article class="pullback-card" id="pullback-card"></article>
+              <article class="card automation-summary-card">
+                <div class="automation-summary-head">
+                  <div><span class="section-label">Background automation</span><h3 id="automation-summary-title">Monitoring is active</h3><p>Auto-sweep and pull-back rules run quietly in the background until attention is needed.</p></div>
+                  <button class="button button--secondary" id="open-automation" type="button">Open automation details</button>
+                </div>
+                <div class="automation-summary-grid">
+                  <div><span class="automation-mini-icon" aria-hidden="true">↗</span><span><strong>Auto-sweep</strong><small id="sweep-summary-status">Ready · Review required</small></span></div>
+                  <div><span class="automation-mini-icon" aria-hidden="true">↙</span><span><strong>Pull-back</strong><small id="pullback-summary-status">Standing by · Review required</small></span></div>
+                  <div><span class="automation-mini-icon" aria-hidden="true">◷</span><span><strong>Last checked</strong><small>Today, 9:00 AM</small></span></div>
+                </div>
+              </article>
               <div class="risk-notice"><strong>Important:</strong> Money market funds are not bank deposits and are not risk-free. The return shown is indicative, may change, and is not guaranteed. This prototype cannot place or redeem investments.</div>
             </section>
 
@@ -277,7 +286,7 @@
               <div class="section-intro"><div><span class="eyebrow">Demo preferences</span><h2 id="settings-heading">Set your liquidity guardrails</h2><p>Adjust the simulated reserve and communication preferences used in this prototype.</p></div><span class="simulation-pill">Browser-only settings</span></div>
               <form id="settings-form" class="settings-layout" novalidate>
                 <article class="card settings-section">
-                  <div class="settings-heading"><span class="settings-icon" aria-hidden="true">RM</span><div><h3>Minimum cash reserve</h3><p>TunaiPintar will not propose a sweep that takes available cash below this amount.</p></div></div>
+                  <div class="settings-heading"><span class="settings-icon" aria-hidden="true">RM</span><div><h3>Minimum cash reserve</h3><p>Use this threshold to compare available cash with the operating liquidity you want to protect.</p></div></div>
                   <div class="reserve-field"><span>RM</span><input id="reserve-input" type="number" min="50000" max="400000" step="1000" aria-describedby="reserve-help reserve-error"><span>.00</span></div>
                   <p class="help-text" id="reserve-help">Choose between RM50,000 and RM400,000.</p>
                   <p class="field-error" id="reserve-error"></p>
@@ -286,7 +295,7 @@
                 <article class="card settings-section">
                   <div class="settings-heading"><span class="settings-icon" aria-hidden="true">✦</span><div><h3>Notifications</h3><p>Choose which simulated treasury updates you would like to receive.</p></div></div>
                   <div class="toggle-list">
-                    <label><span><strong>Sweep proposals</strong><small>When surplus cash may be available</small></span><input type="checkbox" id="notify-sweeps"><i></i></label>
+                    <label><span><strong>Portfolio updates</strong><small>When the simulated investment view changes</small></span><input type="checkbox" id="notify-sweeps"><i></i></label>
                     <label><span><strong>Forecast warnings</strong><small>When cash may approach your reserve</small></span><input type="checkbox" id="notify-warnings"><i></i></label>
                     <label><span><strong>Weekly summary</strong><small>A concise view of cash and investment activity</small></span><input type="checkbox" id="notify-weekly"><i></i></label>
                   </div>
@@ -349,20 +358,52 @@
       </div>
     </div>
 
-    <div class="modal-backdrop" id="sweep-modal" hidden>
-      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-description">
-        <button class="modal-close" id="modal-close" type="button" aria-label="Close review">×</button>
-        <span class="modal-icon" aria-hidden="true">↗</span>
-        <span class="section-label">Simulated action</span>
-        <h2 id="modal-title">Review proposed cash sweep</h2>
-        <p id="modal-description">Confirm the figures below. No money will move and no investment order will be created.</p>
-        <div class="modal-amount"><span>Proposed placement</span><strong id="modal-sweep-amount">RM0</strong></div>
-        <dl class="review-list" id="modal-review-list"></dl>
-        <label class="confirmation-check"><input type="checkbox" id="simulation-confirm"><span>I understand this is a simulation and not a real investment.</span></label>
-        <p class="field-error" id="confirm-error"></p>
-        <div class="modal-actions"><button class="button button--secondary" id="cancel-sweep" type="button">Cancel</button><button class="button button--primary" id="confirm-sweep" type="button">Confirm simulated sweep</button></div>
-      </section>
-    </div>
+    <div class="automation-drawer-backdrop" id="automation-drawer-backdrop" hidden></div>
+    <aside class="automation-drawer" id="automation-drawer" role="dialog" aria-modal="true" aria-labelledby="automation-drawer-title" hidden>
+      <div class="automation-drawer-head">
+        <div><span class="section-label">Background automation</span><h2 id="automation-drawer-title">Automation settings</h2></div>
+        <button class="modal-close" id="close-automation" type="button" aria-label="Close automation settings">×</button>
+      </div>
+
+      <label class="automation-master-row">
+        <span><strong>Background monitoring</strong><small>Check cash forecasts and protection rules</small></span>
+        <input id="automation-monitoring" type="checkbox" checked>
+        <i aria-hidden="true"></i>
+      </label>
+
+      <form id="automation-form">
+        <section class="automation-rule" id="automation-sweep-rule">
+          <div class="automation-rule-head">
+            <span class="automation-rule-icon" aria-hidden="true">↗</span>
+            <div><span class="section-label">Auto-sweep</span><h3>Invest eligible surplus</h3></div>
+            <label class="automation-switch"><span class="sr-only">Enable auto-sweep</span><input id="automation-sweep-enabled" type="checkbox" checked><i aria-hidden="true"></i></label>
+          </div>
+          <p>When safe surplus exceeds the trigger, prepare a simulated investment action.</p>
+          <div class="automation-fields">
+            <label><span>Minimum eligible surplus</span><div class="currency-input"><b>RM</b><input id="automation-sweep-trigger" type="number" min="10000" max="400000" step="10000" value="120000"></div></label>
+            <label><span>Action mode</span><select id="automation-sweep-mode"><option value="review">Require review</option><option value="automatic">Simulate automatically</option></select></label>
+          </div>
+        </section>
+
+        <section class="automation-rule" id="automation-pullback-rule">
+          <div class="automation-rule-head">
+            <span class="automation-rule-icon" aria-hidden="true">↙</span>
+            <div><span class="section-label">Automatic pull-back</span><h3>Protect operating cash</h3></div>
+            <label class="automation-switch"><span class="sr-only">Enable automatic pull-back</span><input id="automation-pullback-enabled" type="checkbox" checked><i aria-hidden="true"></i></label>
+          </div>
+          <p>When forecast cash falls below the protected floor, prepare a simulated redemption.</p>
+          <div class="automation-fields">
+            <label><span>Protected cash floor</span><div class="currency-input"><b>RM</b><input id="automation-protected-floor" type="number" min="50000" max="400000" step="10000" value="220000"></div></label>
+            <label><span>Maximum pull-back</span><div class="currency-input"><b>RM</b><input id="automation-pullback-max" type="number" min="10000" max="185000" step="10000" value="40000"></div></label>
+            <label class="automation-field-wide"><span>Action mode</span><select id="automation-pullback-mode"><option value="review">Require review</option><option value="automatic">Simulate automatically</option></select></label>
+          </div>
+        </section>
+
+        <div class="automation-safety-note"><span aria-hidden="true">✓</span><div><strong>Recommended prototype default</strong><p>Monitor automatically, but require review before every simulated movement.</p></div></div>
+        <p class="field-error" id="automation-error" role="alert"></p>
+        <div class="automation-actions"><span id="automation-save-status" aria-live="polite">No unsaved changes</span><button class="button button--primary" type="submit">Save demo settings</button></div>
+      </form>
+    </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden><span class="toast-icon" aria-hidden="true">✓</span><div><strong id="toast-title">Updated</strong><p id="toast-message"></p></div><button type="button" id="toast-close" aria-label="Dismiss notification">×</button></div>
 
