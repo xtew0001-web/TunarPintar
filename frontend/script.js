@@ -17,17 +17,11 @@ const state = {
   reserve: 220000,
   currentReport: 0,
   forecastRange: 30,
-  sweepConfirmed: false,
   userEmail: "",
   profile: null,
   isLoggingIn: false,
   loginTimer: null,
-  toastTimer: null,
-  lastFocusedElement: null,
-  unexpectedPayment: 0,
-  pullBackActive: false,
-  recommendationLastUpdated: "4 Oct 2026, 9:00 AM",
-  recommendationReason: "Scheduled obligations, forecast receipts and the liquidity buffer were reviewed."
+  toastTimer: null
 };
 
 const $ = (selector, parent = document) => parent.querySelector(selector);
@@ -93,20 +87,12 @@ function bindStaticEvents() {
   $("#change-preference").addEventListener("click", toggleCompliance);
   $("#export-report").addEventListener("click", exportReport);
 
-  $("#modal-close").addEventListener("click", closeSweepModal);
-  $("#cancel-sweep").addEventListener("click", closeSweepModal);
-  $("#confirm-sweep").addEventListener("click", confirmSweep);
-  $("#sweep-modal").addEventListener("click", (event) => {
-    if (event.target === $("#sweep-modal")) closeSweepModal();
-  });
   $("#toast-close").addEventListener("click", hideToast);
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
-      if (!$("#sweep-modal").hidden) closeSweepModal();
       closeSidebar();
     }
-    if (event.key === "Tab" && !$("#sweep-modal").hidden) trapModalFocus(event);
   });
 }
 
@@ -203,11 +189,6 @@ function logout() {
   resetLoginButton();
   sessionStorage.removeItem("tunaiPintarDemoSession");
   state.data = null;
-  state.sweepConfirmed = false;
-  state.unexpectedPayment = 0;
-  state.pullBackActive = false;
-  state.recommendationLastUpdated = "4 Oct 2026, 9:00 AM";
-  state.recommendationReason = "Scheduled obligations, forecast receipts and the liquidity buffer were reviewed.";
   state.userEmail = "";
   state.profile = null;
   window.location.hash = "";
@@ -277,20 +258,16 @@ function routeFromHash() {
 function renderDashboard() {
   renderKpis();
   const data = state.data;
-  const sweep = getSweepFigures();
-  const pullBack = getPullBackFigures();
   const points = getAdjustedCashFlowPoints().slice(0, 8);
   const forecastLow = Math.min(...points.filter((point) => point.kind === "forecast").map((point) => point.value));
   $("#dashboard-chart").innerHTML = buildLineChart(points, "dashboard-gradient", state.reserve, 245);
   $("#dashboard-chart-footer").innerHTML = `<span>Forecast low <strong>${rm(forecastLow)}</strong></span><span>Minimum reserve <strong>${rm(state.reserve)}</strong></span><span>Confidence <strong>${data.cash_flow.confidence}</strong></span>`;
 
-  const insight = data.insights[0];
-  const scenarioActive = state.unexpectedPayment > 0;
   $("#dashboard-insight").innerHTML = `
-    <div class="insight-head"><span class="ai-label">AI insight · Simulated</span><a class="ai-orb" href="#investments" aria-label="Review the AI treasury recommendation" title="Review recommendation">✦</a></div>
-    <h3>${state.sweepConfirmed ? "Simulated sweep recorded" : state.pullBackActive ? `${rm(pullBack.amount)} automatic pull back initiated` : scenarioActive ? `Recommendation reduced to ${rm(sweep.amount)}` : insight.title}</h3>
-    <p>${state.sweepConfirmed ? "Your demo activity has been updated for this browser session. No money moved and the source JSON was not changed." : state.pullBackActive ? "The liquidity guardrail paused new sweeps and started a simulated T+1 redemption from the invested balance." : scenarioActive ? `A new ${rm(state.unexpectedPayment)} supplier payment was detected. The proposed sweep was recalculated while protecting the reserve and retained buffer.` : insight.message}</p>
-    <div class="insight-metric"><span>Retained buffer<br><strong>${rm(sweep.buffer)}</strong></span><span>30-day obligations<br><strong>${rm(sumExpenses())}</strong></span><span>Recalculated<br><strong>${state.recommendationLastUpdated}</strong></span></div>`;
+    <div class="insight-head"><span class="ai-label">Portfolio snapshot · Simulated</span><a class="ai-orb" href="#investments" aria-label="View the investment portfolio" title="View portfolio">◇</a></div>
+    <h3>${data.investment.fund_name}</h3>
+    <p>Review the fictional money market holding, its composition, indicative return and liquidity information in the dedicated portfolio view.</p>
+    <div class="insight-metric"><span>Invested balance<br><strong>${rm(data.investment.invested_balance)}</strong></span><span>Indicative return<br><strong>${percent(data.investment.indicative_return_pa)} p.a.</strong></span><span>Liquidity<br><strong>T+1</strong></span></div>`;
 
   $("#upcoming-mini").innerHTML = getUpcomingExpenses().slice(0, 3).map((expense) => `
     <div class="list-item"><span class="list-icon">${expense.date.split(" ")[0]}</span><div class="list-copy"><strong>${expense.payee}</strong><small>${expense.date} · ${expense.category}</small></div><span class="list-amount">${rm(expense.amount)}</span></div>`).join("");
@@ -300,11 +277,10 @@ function renderDashboard() {
 
 function renderKpis() {
   const balances = state.data.balances;
-  const sweep = getSweepFigures();
   const cards = [
     ["Total business cash", balances.total_business_cash, "Across two demo bank accounts", "RM", "+8.4% this month", "#cash-flow"],
     ["Protected reserve", state.reserve, "Liquidity floor that is not invested", "▣", "Guardrail active", "#settings"],
-    ["Recommended sweep", sweep.amount, "After obligations and forecast buffer", "↗", state.unexpectedPayment ? "Recalculated just now" : "Adaptive estimate", "#investments"],
+    ["Est. monthly return", state.data.investment.estimated_return_month, "Indicative portfolio estimate", "↗", "Not guaranteed", "#investments"],
     ["Invested balance", balances.invested_balance, "Fictional money market holding", "◇", "Indicative return only", "#investments"]
   ];
   $("#kpi-grid").innerHTML = cards.map(([label, value, note, icon, tag, href]) => `
@@ -353,39 +329,17 @@ function renderCashFlow() {
     <div class="schedule-row"><span class="date">${expense.date.replace(" 2026", "")}</span><div><strong>${expense.payee}</strong><small>${expense.category}</small></div><span class="status ${expense.status === "Forecast" ? "status--forecast" : expense.status === "New" ? "status--urgent" : ""}">${expense.status}</span><span class="amount">${rm(expense.amount)}</span></div>`).join("");
 }
 
-function getSweepFigures() {
-  const current = state.data.balances.total_business_cash;
-  const baseAmount = state.data.investment.proposed_sweep.amount;
-  const pendingPayment = state.unexpectedPayment;
-  const amount = state.pullBackActive ? 0 : Math.max(0, Math.min(baseAmount - pendingPayment, current - state.reserve - pendingPayment));
-  const postSweep = current - amount;
-  const targetBuffer = Math.max(0, current - state.reserve - baseAmount);
-  const availableAfterProtection = Math.max(0, current - state.reserve - pendingPayment - amount);
-  const buffer = Math.min(targetBuffer, availableAfterProtection);
-  const heldCash = Math.max(0, current - state.reserve - pendingPayment - amount - buffer);
-  return { current, amount, postSweep, buffer, pendingPayment, baseAmount, heldCash };
-}
-
-function getPullBackFigures() {
-  const invested = state.data.investment.invested_balance;
-  const amount = Math.min(40000, invested);
-  return { invested, amount, remaining: invested - amount, available: "13 Oct 2026 · T+1" };
-}
-
 function renderInvestments() {
   if (!state.data) return;
   const fund = state.data.investment;
   const isShariah = state.compliance === "Shariah";
   const fundName = isShariah ? fund.fund_name : "Prima Liquidity Fund";
   const classification = isShariah ? fund.classification : "Conventional money market fund (fictional)";
-  const pullBack = getPullBackFigures();
-  const displayedInvestment = state.pullBackActive ? pullBack.remaining : fund.invested_balance;
-  const displayedMonthlyReturn = Math.round(fund.estimated_return_month * (displayedInvestment / fund.invested_balance));
   $("#compliance-badge").textContent = `${state.compliance} preference`;
   $("#portfolio-card").innerHTML = `
     <div class="fund-head"><div class="fund-identity"><span class="fund-logo">${isShariah ? "AL" : "PL"}</span><div><h3>${fundName}</h3><p>${classification} · Demo data</p></div></div><span class="risk-chip">${fund.risk_level}</span></div>
-    <div class="portfolio-balance"><span>${state.pullBackActive ? "Remaining invested after pending redemption" : "Simulated invested balance"}</span><strong>${rm(displayedInvestment)}</strong>${state.pullBackActive ? `<small>${rm(pullBack.amount)} redemption processing</small>` : ""}</div>
-    <div class="portfolio-stats"><div><span>Indicative return p.a.</span><strong>${percent(fund.indicative_return_pa)}</strong></div><div><span>Est. monthly return</span><strong>${rm(displayedMonthlyReturn)}</strong></div><div><span>Liquidity</span><strong>${fund.liquidity}</strong></div></div>`;
+    <div class="portfolio-balance"><span>Simulated invested balance</span><strong>${rm(fund.invested_balance)}</strong></div>
+    <div class="portfolio-stats"><div><span>Indicative return p.a.</span><strong>${percent(fund.indicative_return_pa)}</strong></div><div><span>Est. monthly return</span><strong>${rm(fund.estimated_return_month)}</strong></div><div><span>Liquidity</span><strong>${fund.liquidity}</strong></div></div>`;
   const colours = ["#0f766e", "#5abfb2", "#cbd8d5"];
   const conventionalLabels = ["Term deposits", "Short-term instruments", "Cash equivalents"];
   let start = 0;
@@ -396,37 +350,6 @@ function renderInvestments() {
   });
   $("#allocation-donut").style.background = `conic-gradient(${segments.join(",")})`;
   $("#allocation-legend").innerHTML = fund.allocation.map((item, index) => `<div><i style="background:${colours[index]}"></i><span>${isShariah ? item.name : conventionalLabels[index]}</span><strong>${item.percent}%</strong></div>`).join("");
-
-  const sweep = getSweepFigures();
-  const reservePct = (state.reserve / sweep.current) * 100;
-  const bufferPct = (sweep.buffer / sweep.current) * 100;
-  const paymentPct = (sweep.pendingPayment / sweep.current) * 100;
-  const sweepPct = (sweep.amount / sweep.current) * 100;
-  const heldPct = (sweep.heldCash / sweep.current) * 100;
-  const scenarioActive = sweep.pendingPayment > 0;
-  $("#sweep-card").innerHTML = `
-    <div class="sweep-copy">
-      <div class="recommendation-status"><span class="live-status"><i aria-hidden="true"></i> Adaptive recommendation</span><span>Last recalculated <strong>${state.recommendationLastUpdated}</strong></span></div>
-      <span class="section-label">Core function 02 · Smart auto sweep</span>
-      <h3>${state.sweepConfirmed ? "Sweep simulation complete" : state.pullBackActive ? "New auto sweeps paused for liquidity" : `${rm(sweep.amount)} may be available to sweep`}</h3>
-      <p>${state.sweepConfirmed ? "This browser-only confirmation did not move funds or create an investment order. Refreshing the demo restores the original proposal." : state.pullBackActive ? "The liquidity guardrail temporarily stopped new placements while an automatic pull back is processing." : `The model protects your ${rm(state.reserve)} reserve, known obligations and a ${rm(sweep.buffer)} uncertainty buffer before recommending an investment amount.`}</p>
-      ${scenarioActive ? `<div class="recommendation-change" role="status"><strong>${state.pullBackActive ? "Auto sweep paused" : "Recommendation updated"}</strong><span>${state.pullBackActive ? `A new ${rm(sweep.pendingPayment)} payment activated the pull-back rule, so no additional cash will be invested.` : `A new ${rm(sweep.pendingPayment)} supplier payment reduced the proposed sweep from ${rm(sweep.baseAmount)} to ${rm(sweep.amount)}.`}</span></div>` : ""}
-      <div class="recommendation-factors"><span>Confidence: ${state.data.cash_flow.confidence}</span><span>${state.data.investment.liquidity}</span><span>${getUpcomingExpenses().length} obligations reviewed</span></div>
-      <div class="sweep-metrics"><div><span>Current cash</span><strong>${rm(sweep.current)}</strong></div><div><span>Recommended sweep</span><strong>${rm(sweep.amount)}</strong></div><div><span>Buffer after pending payments</span><strong>${rm(sweep.buffer)}</strong></div></div>
-      <div class="sweep-actions"><button class="button button--primary" id="review-sweep" type="button" ${state.sweepConfirmed || state.pullBackActive ? "disabled" : ""}>${state.sweepConfirmed ? "Simulation confirmed" : state.pullBackActive ? "Sweep paused" : "Review simulated sweep"}</button><button class="button button--scenario" id="simulate-payment" type="button" ${state.pullBackActive ? "disabled" : ""}>${scenarioActive && !state.pullBackActive ? "Reset payment scenario" : "See unexpected payment impact"}</button></div>
-    </div>
-    <div class="sweep-visual"><div class="balance-stack"><h4>How current cash is protected</h4><div class="balance-bar" aria-label="Current cash allocation"><span class="reserve" style="width:${reservePct}%"></span><span class="buffer" style="width:${bufferPct}%"></span>${scenarioActive ? `<span class="payment" style="width:${paymentPct}%"></span>` : ""}${sweep.heldCash ? `<span class="held" style="width:${heldPct}%"></span>` : ""}<span class="sweep" style="width:${sweepPct}%"></span></div><div class="balance-legend"><div><span>Protected reserve</span><strong>${rm(state.reserve)}</strong></div><div><span>Uncertainty buffer</span><strong>${rm(sweep.buffer)}</strong></div>${scenarioActive ? `<div><span>New payment protected</span><strong>${rm(sweep.pendingPayment)}</strong></div>` : ""}${sweep.heldCash ? `<div><span>Cash held while pull back runs</span><strong>${rm(sweep.heldCash)}</strong></div>` : ""}<div><span>Proposed sweep</span><strong>${rm(sweep.amount)}</strong></div></div><p class="recalculation-reason">${state.recommendationReason}</p></div></div>`;
-  const reviewButton = $("#review-sweep");
-  if (reviewButton && !state.sweepConfirmed && !state.pullBackActive) reviewButton.addEventListener("click", openSweepModal);
-  if (!state.pullBackActive) $("#simulate-payment").addEventListener("click", state.unexpectedPayment ? resetPaymentScenario : simulateUnexpectedPayment);
-
-  $("#pullback-card").innerHTML = state.pullBackActive ? `
-    <div class="pullback-main"><div class="pullback-head"><span class="section-label">Core function 03 · Automatic pull back</span><span class="processing-chip"><i aria-hidden="true"></i> Redemption processing</span></div><h3>${rm(pullBack.amount)} is returning to operating cash</h3><p>The AI forecast detected a liquidity risk after a new supplier payment. Because the demo auto-protect rule is enabled, the system paused new sweeps and initiated a simulated redemption.</p><div class="pullback-metrics"><div><span>Pull-back amount</span><strong>${rm(pullBack.amount)}</strong></div><div><span>Remaining invested</span><strong>${rm(pullBack.remaining)}</strong></div><div><span>Expected availability</span><strong>${pullBack.available}</strong></div></div><button class="button button--secondary" id="reset-pullback" type="button">Reset pull-back scenario</button></div>
-    <div class="pullback-timeline" aria-label="Automatic pull-back progress"><div class="complete"><i>✓</i><span>Liquidity risk detected<small>Forecast updated</small></span></div><div class="complete"><i>✓</i><span>Protection rule checked<small>Threshold breached</small></span></div><div class="active"><i>3</i><span>Redemption submitted<small>Processing now</small></span></div><div><i>4</i><span>Cash available<small>Expected T+1</small></span></div></div>` : `
-    <div class="pullback-main"><div class="pullback-head"><span class="section-label">Core function 03 · Automatic pull back</span><span class="ready-chip">Auto-protect rule · On</span></div><h3>Bring invested cash back when liquidity changes</h3><p>If a new payment or changed due date creates a forecast shortfall, the enabled protection rule can pause new sweeps and initiate a redemption from the simulated investment balance.</p><div class="pullback-metrics"><div><span>Demo trigger</span><strong>Forecast liquidity risk</strong></div><div><span>Demo pull back</span><strong>${rm(pullBack.amount)}</strong></div><div><span>Expected availability</span><strong>T+1</strong></div></div><button class="button button--secondary" id="simulate-pullback" type="button">Simulate automatic pull back</button></div>
-    <div class="pullback-explainer"><span class="pullback-icon" aria-hidden="true">↙</span><strong>How it differs from auto sweep</strong><p>Auto sweep moves eligible surplus into an investment. Automatic pull back redeems existing investments when operating liquidity needs protection.</p><small>Demo only—no real redemption will be submitted.</small></div>`;
-  const pullBackButton = state.pullBackActive ? $("#reset-pullback") : $("#simulate-pullback");
-  pullBackButton.addEventListener("click", state.pullBackActive ? resetPullBackScenario : simulatePullBack);
 }
 
 function renderTransactions() {
@@ -598,8 +521,7 @@ function updateReserveImpact() {
     return;
   }
   const estimatedSurplus = Math.max(0, state.data.balances.total_business_cash - value);
-  const proposal = state.pullBackActive ? 0 : Math.max(0, Math.min(state.data.investment.proposed_sweep.amount - state.unexpectedPayment, estimatedSurplus - state.unexpectedPayment));
-  $("#reserve-impact").innerHTML = `Cash above the reserve would be <strong>${rm(estimatedSurplus)}</strong>; the adaptive recommendation would be <strong>${rm(proposal)}</strong>${state.pullBackActive ? " while new sweeps are paused for the pull back" : " after pending payments and the forecast buffer"}.`;
+  $("#reserve-impact").innerHTML = `Cash above the selected reserve would be <strong>${rm(estimatedSurplus)}</strong>. This setting does not place or change investments.`;
 }
 
 function saveSettings(event) {
@@ -617,9 +539,6 @@ function saveSettings(event) {
     forecast_warnings: $("#notify-warnings").checked,
     weekly_summary: $("#notify-weekly").checked
   };
-  state.sweepConfirmed = false;
-  state.recommendationLastUpdated = "Just now";
-  state.recommendationReason = `The minimum reserve was updated to ${rm(reserve)}, so the recommendation was recalculated.`;
   renderAll();
   showToast("Demo settings updated", "Your changes are temporary and were not saved to a server.");
 }
@@ -634,46 +553,6 @@ function toggleCompliance() {
   renderInvestments();
   renderSettings();
   showToast("Preference switched", `${state.compliance} examples are now shown. This is a demo-only change.`);
-}
-
-function openSweepModal() {
-  const sweep = getSweepFigures();
-  state.lastFocusedElement = document.activeElement;
-  $("#modal-sweep-amount").textContent = rm(sweep.amount);
-  $("#modal-review-list").innerHTML = `<div><dt>Current business cash</dt><dd>${rm(sweep.current)}</dd></div><div><dt>Minimum cash reserve</dt><dd>${rm(state.reserve)}</dd></div>${sweep.pendingPayment ? `<div><dt>New payment protected</dt><dd>${rm(sweep.pendingPayment)}</dd></div>` : ""}<div><dt>Cash after proposal</dt><dd>${rm(sweep.postSweep)}</dd></div><div><dt>Buffer after pending payments</dt><dd>${rm(sweep.buffer)}</dd></div><div><dt>Last recalculated</dt><dd>${state.recommendationLastUpdated}</dd></div><div><dt>Redemption timing</dt><dd>${state.data.investment.liquidity}</dd></div><div><dt>Example fund type</dt><dd>${state.compliance}</dd></div>`;
-  $("#simulation-confirm").checked = false;
-  $("#confirm-error").textContent = "";
-  $("#sweep-modal").hidden = false;
-  document.body.style.overflow = "hidden";
-  $("#modal-close").focus();
-}
-
-function closeSweepModal() {
-  if ($("#sweep-modal").hidden) return;
-  $("#sweep-modal").hidden = true;
-  document.body.style.overflow = "";
-  if (state.lastFocusedElement) state.lastFocusedElement.focus();
-}
-
-function confirmSweep() {
-  if (!$("#simulation-confirm").checked) {
-    $("#confirm-error").textContent = "Confirm that you understand this is only a simulation.";
-    $("#simulation-confirm").focus();
-    return;
-  }
-  state.sweepConfirmed = true;
-  closeSweepModal();
-  renderInvestments();
-  renderDashboard();
-  showToast("Simulated sweep confirmed", "No funds moved and no investment order was created.");
-}
-
-function trapModalFocus(event) {
-  const focusable = $$('button:not([disabled]), input:not([disabled])', $("#sweep-modal"));
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 }
 
 function exportReport() {
@@ -726,80 +605,11 @@ function hideToast() {
 }
 
 function getAdjustedCashFlowPoints() {
-  return state.data.cash_flow.points.map((point, index) => {
-    let value = point.kind === "forecast" ? point.value - state.unexpectedPayment : point.value;
-    if (state.pullBackActive && point.kind === "forecast" && index >= 5) value += getPullBackFigures().amount;
-    return { ...point, value };
-  });
+  return state.data.cash_flow.points.map((point) => ({ ...point }));
 }
 
 function getUpcomingExpenses() {
-  const expenses = state.data.upcoming_expenses.map((expense) => ({ ...expense }));
-  if (state.unexpectedPayment > 0) {
-    expenses.splice(2, 0, {
-      id: "unexpected",
-      date: "12 Oct 2026",
-      payee: "Unplanned supplier payment",
-      category: "Supplier · newly detected",
-      amount: state.unexpectedPayment,
-      status: "New"
-    });
-  }
-  return expenses;
-}
-
-function simulateUnexpectedPayment() {
-  state.pullBackActive = false;
-  state.unexpectedPayment = 40000;
-  state.recommendationLastUpdated = "Just now";
-  state.recommendationReason = "A newly detected RM40,000 supplier payment was protected before calculating investable cash.";
-  state.sweepConfirmed = false;
-  renderDashboard();
-  renderCashFlow();
-  renderInvestments();
-  renderProfile();
-  showToast("Recommendation recalculated", "The proposed sweep fell from RM120,000 to RM80,000 after protecting the new payment.");
-}
-
-function resetPaymentScenario() {
-  state.unexpectedPayment = 0;
-  state.pullBackActive = false;
-  state.recommendationLastUpdated = "4 Oct 2026, 9:00 AM";
-  state.recommendationReason = "Scheduled obligations, forecast receipts and the liquidity buffer were reviewed.";
-  state.sweepConfirmed = false;
-  renderDashboard();
-  renderCashFlow();
-  renderInvestments();
-  renderProfile();
-  showToast("Scenario reset", "The recommendation has returned to the baseline demo forecast.");
-}
-
-function simulatePullBack() {
-  state.pullBackActive = true;
-  state.unexpectedPayment = 40000;
-  state.recommendationLastUpdated = "Just now";
-  state.recommendationReason = "The liquidity guardrail detected a new RM40,000 payment, paused new sweeps and initiated a simulated T+1 pull back.";
-  state.sweepConfirmed = false;
-  renderDashboard();
-  renderCashFlow();
-  renderInvestments();
-  renderProfile();
-  updateReserveImpact();
-  showToast("Automatic pull back initiated", "RM40,000 is shown as redeeming from investments with expected T+1 availability.");
-}
-
-function resetPullBackScenario() {
-  state.pullBackActive = false;
-  state.unexpectedPayment = 0;
-  state.recommendationLastUpdated = "4 Oct 2026, 9:00 AM";
-  state.recommendationReason = "Scheduled obligations, forecast receipts and the liquidity buffer were reviewed.";
-  state.sweepConfirmed = false;
-  renderDashboard();
-  renderCashFlow();
-  renderInvestments();
-  renderProfile();
-  updateReserveImpact();
-  showToast("Pull-back scenario reset", "The invested balance and auto-sweep recommendation returned to the baseline demo.");
+  return state.data.upcoming_expenses.map((expense) => ({ ...expense }));
 }
 
 function sumExpenses() {
