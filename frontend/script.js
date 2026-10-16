@@ -19,6 +19,17 @@ const state = {
   forecastRange: 30,
   userEmail: "",
   profile: null,
+  automation: {
+    monitoring: true,
+    autoSweep: true,
+    autoPullback: true,
+    sweepTrigger: 120000,
+    protectedFloor: 220000,
+    maxPullback: 40000,
+    sweepMode: "review",
+    pullbackMode: "review"
+  },
+  automationLastFocus: null,
   isLoggingIn: false,
   loginTimer: null,
   toastTimer: null
@@ -36,6 +47,7 @@ const initials = (email) => (email || "Demo User").split(/[@.\s_-]/).filter(Bool
 
 document.addEventListener("DOMContentLoaded", () => {
   bindStaticEvents();
+  Object.assign(state.automation, readAutomationSettings());
   const session = readSession();
   if (session) {
     state.compliance = session.compliance || "Shariah";
@@ -86,13 +98,23 @@ function bindStaticEvents() {
   $("#profile-form").addEventListener("submit", saveProfile);
   $("#change-preference").addEventListener("click", toggleCompliance);
   $("#export-report").addEventListener("click", exportReport);
+  $("#open-automation").addEventListener("click", openAutomationDrawer);
+  $("#close-automation").addEventListener("click", () => closeAutomationDrawer());
+  $("#automation-drawer-backdrop").addEventListener("click", () => closeAutomationDrawer());
+  $("#automation-form").addEventListener("submit", saveAutomationSettings);
+  $$("input, select", $("#automation-drawer")).forEach((control) => control.addEventListener("change", handleAutomationControlChange));
 
   $("#toast-close").addEventListener("click", hideToast);
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      if (!$("#automation-drawer").hidden) {
+        closeAutomationDrawer();
+        return;
+      }
       closeSidebar();
     }
+    if (event.key === "Tab" && !$("#automation-drawer").hidden) trapAutomationFocus(event);
   });
 }
 
@@ -101,6 +123,14 @@ function readSession() {
     return JSON.parse(sessionStorage.getItem("tunaiPintarDemoSession"));
   } catch (_error) {
     return null;
+  }
+}
+
+function readAutomationSettings() {
+  try {
+    return JSON.parse(sessionStorage.getItem("tunaiPintarAutomationSettings")) || {};
+  } catch (_error) {
+    return {};
   }
 }
 
@@ -188,6 +218,7 @@ function logout() {
   state.loginTimer = null;
   resetLoginButton();
   sessionStorage.removeItem("tunaiPintarDemoSession");
+  sessionStorage.removeItem("tunaiPintarAutomationSettings");
   state.data = null;
   state.userEmail = "";
   state.profile = null;
@@ -196,6 +227,7 @@ function logout() {
   $("#login-screen").hidden = false;
   $("#password").value = "";
   document.title = "TunaiPintar — SME Treasury Demo";
+  closeAutomationDrawer(false);
   closeSidebar();
   $("#email").focus();
 }
@@ -350,6 +382,104 @@ function renderInvestments() {
   });
   $("#allocation-donut").style.background = `conic-gradient(${segments.join(",")})`;
   $("#allocation-legend").innerHTML = fund.allocation.map((item, index) => `<div><i style="background:${colours[index]}"></i><span>${isShariah ? item.name : conventionalLabels[index]}</span><strong>${item.percent}%</strong></div>`).join("");
+  renderAutomationSummary();
+}
+
+function automationModeLabel(mode) {
+  return mode === "automatic" ? "Simulate automatically" : "Review required";
+}
+
+function renderAutomationSummary() {
+  const automation = state.automation;
+  $("#automation-summary-title").textContent = automation.monitoring ? "Monitoring is active" : "Monitoring is paused";
+  $("#sweep-summary-status").textContent = !automation.monitoring ? "Paused" : !automation.autoSweep ? "Turned off" : `Ready · ${automationModeLabel(automation.sweepMode)}`;
+  $("#pullback-summary-status").textContent = !automation.monitoring ? "Paused" : !automation.autoPullback ? "Turned off" : `Standing by · ${automationModeLabel(automation.pullbackMode)}`;
+}
+
+function populateAutomationForm() {
+  const automation = state.automation;
+  $("#automation-monitoring").checked = automation.monitoring;
+  $("#automation-sweep-enabled").checked = automation.autoSweep;
+  $("#automation-pullback-enabled").checked = automation.autoPullback;
+  $("#automation-sweep-trigger").value = automation.sweepTrigger;
+  $("#automation-protected-floor").value = automation.protectedFloor;
+  $("#automation-pullback-max").value = automation.maxPullback;
+  $("#automation-sweep-mode").value = automation.sweepMode;
+  $("#automation-pullback-mode").value = automation.pullbackMode;
+  $("#automation-error").textContent = "";
+  $("#automation-save-status").textContent = "No unsaved changes";
+  updateAutomationAvailability();
+}
+
+function updateAutomationAvailability() {
+  const monitoring = $("#automation-monitoring").checked;
+  const sweepEnabled = monitoring && $("#automation-sweep-enabled").checked;
+  const pullbackEnabled = monitoring && $("#automation-pullback-enabled").checked;
+  $("#automation-sweep-rule").classList.toggle("is-disabled", !sweepEnabled);
+  $("#automation-pullback-rule").classList.toggle("is-disabled", !pullbackEnabled);
+  $$("input[type='number'], select", $("#automation-sweep-rule")).forEach((control) => { control.disabled = !sweepEnabled; });
+  $$("input[type='number'], select", $("#automation-pullback-rule")).forEach((control) => { control.disabled = !pullbackEnabled; });
+}
+
+function handleAutomationControlChange() {
+  updateAutomationAvailability();
+  $("#automation-error").textContent = "";
+  $("#automation-save-status").textContent = "Unsaved demo changes";
+}
+
+function openAutomationDrawer() {
+  populateAutomationForm();
+  state.automationLastFocus = document.activeElement;
+  $("#automation-drawer-backdrop").hidden = false;
+  $("#automation-drawer").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("#close-automation").focus();
+}
+
+function closeAutomationDrawer(restoreFocus = true) {
+  const drawer = $("#automation-drawer");
+  if (!drawer || drawer.hidden) return;
+  drawer.hidden = true;
+  $("#automation-drawer-backdrop").hidden = true;
+  document.body.style.overflow = "";
+  if (restoreFocus && state.automationLastFocus) state.automationLastFocus.focus();
+}
+
+function saveAutomationSettings(event) {
+  event.preventDefault();
+  const sweepTrigger = Number($("#automation-sweep-trigger").value);
+  const protectedFloor = Number($("#automation-protected-floor").value);
+  const maxPullback = Number($("#automation-pullback-max").value);
+  const invalidSweep = $("#automation-sweep-enabled").checked && (!Number.isFinite(sweepTrigger) || sweepTrigger < 10000 || sweepTrigger > 400000);
+  const invalidFloor = $("#automation-pullback-enabled").checked && (!Number.isFinite(protectedFloor) || protectedFloor < 50000 || protectedFloor > 400000);
+  const invalidPullback = $("#automation-pullback-enabled").checked && (!Number.isFinite(maxPullback) || maxPullback < 10000 || maxPullback > state.data.investment.invested_balance);
+  if (invalidSweep || invalidFloor || invalidPullback) {
+    $("#automation-error").textContent = invalidSweep ? "Enter an auto-sweep trigger between RM10,000 and RM400,000." : invalidFloor ? "Enter a protected cash floor between RM50,000 and RM400,000." : `Enter a maximum pull-back between RM10,000 and ${rm(state.data.investment.invested_balance)}.`;
+    (invalidSweep ? $("#automation-sweep-trigger") : invalidFloor ? $("#automation-protected-floor") : $("#automation-pullback-max")).focus();
+    return;
+  }
+  state.automation = {
+    monitoring: $("#automation-monitoring").checked,
+    autoSweep: $("#automation-sweep-enabled").checked,
+    autoPullback: $("#automation-pullback-enabled").checked,
+    sweepTrigger,
+    protectedFloor,
+    maxPullback,
+    sweepMode: $("#automation-sweep-mode").value,
+    pullbackMode: $("#automation-pullback-mode").value
+  };
+  sessionStorage.setItem("tunaiPintarAutomationSettings", JSON.stringify(state.automation));
+  renderAutomationSummary();
+  $("#automation-save-status").textContent = "Demo settings saved";
+  showToast("Automation settings updated", "Your choices are stored only for this browser session. No real investment action was created.");
+}
+
+function trapAutomationFocus(event) {
+  const focusable = $$("button:not([disabled]), input:not([disabled]), select:not([disabled])", $("#automation-drawer"));
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 }
 
 function renderTransactions() {

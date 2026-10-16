@@ -229,6 +229,17 @@
                   <div class="donut-layout"><div class="donut" id="allocation-donut"><span>100%<small>allocated</small></span></div><div id="allocation-legend" class="allocation-legend"></div></div>
                 </article>
               </div>
+              <article class="card automation-summary-card">
+                <div class="automation-summary-head">
+                  <div><span class="section-label">Background automation</span><h3 id="automation-summary-title">Monitoring is active</h3><p>Auto-sweep and pull-back rules run quietly in the background until attention is needed.</p></div>
+                  <button class="button button--secondary" id="open-automation" type="button">Open automation details</button>
+                </div>
+                <div class="automation-summary-grid">
+                  <div><span class="automation-mini-icon" aria-hidden="true">↗</span><span><strong>Auto-sweep</strong><small id="sweep-summary-status">Ready · Review required</small></span></div>
+                  <div><span class="automation-mini-icon" aria-hidden="true">↙</span><span><strong>Pull-back</strong><small id="pullback-summary-status">Standing by · Review required</small></span></div>
+                  <div><span class="automation-mini-icon" aria-hidden="true">◷</span><span><strong>Last checked</strong><small>Today, 9:00 AM</small></span></div>
+                </div>
+              </article>
               <div class="risk-notice"><strong>Important:</strong> Money market funds are not bank deposits and are not risk-free. The return shown is indicative, may change, and is not guaranteed. This prototype cannot place or redeem investments.</div>
             </section>
 
@@ -346,6 +357,53 @@
         <footer class="app-footer"><strong>TunaiPintar prototype</strong><span>For demonstration only · Not financial advice · No real transactions</span></footer>
       </div>
     </div>
+
+    <div class="automation-drawer-backdrop" id="automation-drawer-backdrop" hidden></div>
+    <aside class="automation-drawer" id="automation-drawer" role="dialog" aria-modal="true" aria-labelledby="automation-drawer-title" hidden>
+      <div class="automation-drawer-head">
+        <div><span class="section-label">Background automation</span><h2 id="automation-drawer-title">Automation settings</h2></div>
+        <button class="modal-close" id="close-automation" type="button" aria-label="Close automation settings">×</button>
+      </div>
+
+      <label class="automation-master-row">
+        <span><strong>Background monitoring</strong><small>Check cash forecasts and protection rules</small></span>
+        <input id="automation-monitoring" type="checkbox" checked>
+        <i aria-hidden="true"></i>
+      </label>
+
+      <form id="automation-form">
+        <section class="automation-rule" id="automation-sweep-rule">
+          <div class="automation-rule-head">
+            <span class="automation-rule-icon" aria-hidden="true">↗</span>
+            <div><span class="section-label">Auto-sweep</span><h3>Invest eligible surplus</h3></div>
+            <label class="automation-switch"><span class="sr-only">Enable auto-sweep</span><input id="automation-sweep-enabled" type="checkbox" checked><i aria-hidden="true"></i></label>
+          </div>
+          <p>When safe surplus exceeds the trigger, prepare a simulated investment action.</p>
+          <div class="automation-fields">
+            <label><span>Minimum eligible surplus</span><div class="currency-input"><b>RM</b><input id="automation-sweep-trigger" type="number" min="10000" max="400000" step="10000" value="120000"></div></label>
+            <label><span>Action mode</span><select id="automation-sweep-mode"><option value="review">Require review</option><option value="automatic">Simulate automatically</option></select></label>
+          </div>
+        </section>
+
+        <section class="automation-rule" id="automation-pullback-rule">
+          <div class="automation-rule-head">
+            <span class="automation-rule-icon" aria-hidden="true">↙</span>
+            <div><span class="section-label">Automatic pull-back</span><h3>Protect operating cash</h3></div>
+            <label class="automation-switch"><span class="sr-only">Enable automatic pull-back</span><input id="automation-pullback-enabled" type="checkbox" checked><i aria-hidden="true"></i></label>
+          </div>
+          <p>When forecast cash falls below the protected floor, prepare a simulated redemption.</p>
+          <div class="automation-fields">
+            <label><span>Protected cash floor</span><div class="currency-input"><b>RM</b><input id="automation-protected-floor" type="number" min="50000" max="400000" step="10000" value="220000"></div></label>
+            <label><span>Maximum pull-back</span><div class="currency-input"><b>RM</b><input id="automation-pullback-max" type="number" min="10000" max="185000" step="10000" value="40000"></div></label>
+            <label class="automation-field-wide"><span>Action mode</span><select id="automation-pullback-mode"><option value="review">Require review</option><option value="automatic">Simulate automatically</option></select></label>
+          </div>
+        </section>
+
+        <div class="automation-safety-note"><span aria-hidden="true">✓</span><div><strong>Recommended prototype default</strong><p>Monitor automatically, but require review before every simulated movement.</p></div></div>
+        <p class="field-error" id="automation-error" role="alert"></p>
+        <div class="automation-actions"><span id="automation-save-status" aria-live="polite">No unsaved changes</span><button class="button button--primary" type="submit">Save demo settings</button></div>
+      </form>
+    </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden><span class="toast-icon" aria-hidden="true">✓</span><div><strong id="toast-title">Updated</strong><p id="toast-message"></p></div><button type="button" id="toast-close" aria-label="Dismiss notification">×</button></div>
 
