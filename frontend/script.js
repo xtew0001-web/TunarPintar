@@ -15,6 +15,7 @@ const state = {
   data: null,
   compliance: "Shariah",
   reserve: 220000,
+  initialReserve: 220000,
   currentReport: 0,
   forecastRange: 30,
   userEmail: "",
@@ -29,6 +30,8 @@ const state = {
     pullbackMode: "review"
   },
   automationLastFocus: null,
+  reserveAuthLastFocus: null,
+  pendingSettings: null,
   isLoggingIn: false,
   loginTimer: null,
   toastTimer: null
@@ -48,9 +51,11 @@ document.addEventListener("DOMContentLoaded", () => {
   bindStaticEvents();
   Object.assign(state.automation, readAutomationSettings());
   const session = readSession();
-  if (session) {
+  if (session?.passwordProof) {
     state.compliance = session.compliance || "Shariah";
     showApplication(session.email);
+  } else if (session) {
+    sessionStorage.removeItem("tunaiPintarDemoSession");
   }
 });
 
@@ -93,7 +98,16 @@ function bindStaticEvents() {
   });
 
   $("#reserve-input").addEventListener("input", updateReserveImpact);
-  $("#settings-form").addEventListener("submit", saveSettings);
+  $("#settings-form").addEventListener("submit", requestSettingsSave);
+  $("#reserve-auth-form").addEventListener("submit", confirmReserveChange);
+  $("#reserve-auth-password").addEventListener("input", () => {
+    if ($("#reserve-auth-password").value) setFieldError($("#reserve-auth-password"), $("#reserve-auth-error"), "");
+  });
+  $("#close-reserve-auth").addEventListener("click", () => closeReserveAuth());
+  $("#cancel-reserve-auth").addEventListener("click", () => closeReserveAuth());
+  $("#reserve-auth-modal").addEventListener("click", (event) => {
+    if (event.target === $("#reserve-auth-modal")) closeReserveAuth();
+  });
   $("#profile-form").addEventListener("submit", saveProfile);
   $("#change-preference").addEventListener("click", toggleCompliance);
   $("#export-report").addEventListener("click", exportReport);
@@ -107,6 +121,10 @@ function bindStaticEvents() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      if (!$("#reserve-auth-modal").hidden) {
+        closeReserveAuth();
+        return;
+      }
       if (!$("#automation-drawer").hidden) {
         closeAutomationDrawer();
         return;
@@ -161,7 +179,13 @@ function resetLoginButton() {
   $(".button-label", button).textContent = "Continue to workspace";
 }
 
-function handleLogin(event) {
+async function createPasswordProof(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function handleLogin(event) {
   event.preventDefault();
   if (state.isLoggingIn) return;
   const emailInput = $("#email");
@@ -184,7 +208,7 @@ function handleLogin(event) {
   }
 
   state.compliance = $("input[name='compliance']:checked").value;
-  const session = { email, compliance: state.compliance };
+  const session = { email, compliance: state.compliance, passwordProof: await createPasswordProof(password) };
   state.isLoggingIn = true;
   const button = $("#login-submit");
   button.disabled = true;
@@ -226,6 +250,7 @@ function logout() {
   $("#login-screen").hidden = false;
   $("#password").value = "";
   document.title = "TunaiPintar — SME Treasury Demo";
+  closeReserveAuth(false);
   closeAutomationDrawer(false);
   closeSidebar();
   $("#email").focus();
@@ -241,7 +266,12 @@ async function loadDashboard() {
     const data = await response.json();
     if (!data.meta || !data.balances || !Array.isArray(data.transactions)) throw new Error("The demo response is missing required fields.");
     state.data = data;
-    state.reserve = data.settings.minimum_reserve;
+    state.initialReserve = data.settings.minimum_reserve;
+    const savedReserve = Number(readSession()?.reserve);
+    state.reserve = Number.isFinite(savedReserve) && savedReserve >= 50000 && savedReserve <= 400000 ? savedReserve : state.initialReserve;
+    state.data.settings.minimum_reserve = state.reserve;
+    state.data.balances.reserved_cash = state.reserve;
+    state.data.balances.estimated_surplus = Math.max(0, state.data.balances.total_business_cash - state.reserve);
     $("#as-of").textContent = `As of ${data.meta.as_of}`;
     renderAll();
     $("#loading-state").hidden = true;
@@ -291,14 +321,17 @@ function renderDashboard() {
   const data = state.data;
   const points = getAdjustedCashFlowPoints().slice(0, 8);
   const forecastLow = Math.min(...points.filter((point) => point.kind === "forecast").map((point) => point.value));
+  const safetyBuffer = forecastLow - state.reserve;
   $("#dashboard-chart").innerHTML = buildLineChart(points, "dashboard-gradient", state.reserve, 245);
-  $("#dashboard-chart-footer").innerHTML = `<span>Forecast low <strong>${rm(forecastLow)}</strong></span><span>Minimum reserve <strong>${rm(state.reserve)}</strong></span><span>Confidence <strong>${data.cash_flow.confidence}</strong></span>`;
+  $("#dashboard-chart-footer").innerHTML = `<span>Forecast low <strong>${rm(forecastLow)}</strong></span><span>Minimum reserve <strong>${rm(state.reserve)}</strong></span><span>${safetyBuffer >= 0 ? "Safety buffer" : "Forecast shortfall"} <strong>${rm(Math.abs(safetyBuffer))}</strong></span>`;
 
   $("#dashboard-insight").innerHTML = `
-    <div class="insight-head"><span class="ai-label">Portfolio snapshot · Simulated</span><a class="ai-orb" href="#investments" aria-label="View the investment portfolio" title="View portfolio">◇</a></div>
-    <h3>${data.investment.fund_name}</h3>
-    <p>Review the fictional money market holding, its composition, indicative return and liquidity information in the dedicated portfolio view.</p>
-    <div class="insight-metric"><span>Invested balance<br><strong>${rm(data.investment.invested_balance)}</strong></span><span>Indicative return<br><strong>${percent(data.investment.indicative_return_pa)} p.a.</strong></span><span>Liquidity<br><strong>T+1</strong></span></div>`;
+    <div class="insight-head"><span class="ai-label">Liquidity guardrail · Simulated</span><a class="ai-orb" href="#settings" aria-label="Change minimum cash reserve" title="Change reserve">▣</a></div>
+    <h3>${safetyBuffer >= 0 ? "Reserve protected" : "Reserve at risk"}</h3>
+    <p>${safetyBuffer >= 0
+      ? `The lowest forecast cash remains ${rm(safetyBuffer)} above your ${rm(state.reserve)} minimum reserve.`
+      : `Forecast cash may fall ${rm(Math.abs(safetyBuffer))} below your ${rm(state.reserve)} minimum reserve. Review upcoming payments and the pull-back rule.`}</p>
+    <div class="insight-metric"><span>Minimum reserve<br><strong>${rm(state.reserve)}</strong></span><span>Forecast low<br><strong>${rm(forecastLow)}</strong></span><span>${safetyBuffer >= 0 ? "Safety buffer" : "Shortfall"}<br><strong>${rm(Math.abs(safetyBuffer))}</strong></span></div>`;
 
   $("#upcoming-mini").innerHTML = getUpcomingExpenses().slice(0, 3).map((expense) => `
     <div class="list-item"><span class="list-icon">${expense.date.split(" ")[0]}</span><div class="list-copy"><strong>${expense.payee}</strong><small>${expense.date} · ${expense.category}</small></div><span class="list-amount">${rm(expense.amount)}</span></div>`).join("");
@@ -310,8 +343,8 @@ function renderKpis() {
   const balances = state.data.balances;
   const cards = [
     ["Total business cash", balances.total_business_cash, "Across two demo bank accounts", "RM", "+8.4% this month", "#cash-flow"],
-    ["Protected reserve", state.reserve, "Liquidity floor that is not invested", "▣", "Guardrail active", "#settings"],
-    ["Est. monthly return", state.data.investment.estimated_return_month, "Indicative portfolio estimate", "↗", "Not guaranteed", "#investments"],
+    ["Protected reserve", state.reserve, "Liquidity floor that is not invested", "▣", "Safety guardrail", "#settings"],
+    ["Available surplus", balances.estimated_surplus, "Cash remaining above the reserve", "↗", "After reserve", "#settings"],
     ["Invested balance", balances.invested_balance, "Fictional money market holding", "◇", "Indicative return only", "#investments"]
   ];
   $("#kpi-grid").innerHTML = cards.map(([label, value, note, icon, tag, href]) => `
@@ -350,11 +383,14 @@ function renderCashFlow() {
   const allPoints = getAdjustedCashFlowPoints();
   const count = state.forecastRange === 30 ? 8 : state.forecastRange === 60 ? 10 : allPoints.length;
   const points = allPoints.slice(0, count);
+  const forecastLow = Math.min(...points.filter((point) => point.kind === "forecast").map((point) => point.value));
+  const reserveGap = forecastLow - state.reserve;
   $("#cash-flow-chart").innerHTML = buildLineChart(points, "cashflow-gradient", state.reserve, 260, 1120);
   $("#cash-flow-summary").innerHTML = `
     <div><span>Current business cash</span><strong>${rm(state.data.balances.total_business_cash)}</strong></div>
-    <div><span>Forecast low</span><strong>${rm(Math.min(...points.filter((point) => point.kind === "forecast").map((point) => point.value)))}</strong></div>
-    <div><span>Minimum reserve</span><strong>${rm(state.reserve)}</strong></div>`;
+    <div><span>Forecast low</span><strong>${rm(forecastLow)}</strong></div>
+    <div><span>Minimum reserve</span><strong>${rm(state.reserve)}</strong></div>
+    <div><span>${reserveGap >= 0 ? "Safety buffer" : "Forecast shortfall"}</span><strong>${rm(Math.abs(reserveGap))}</strong></div>`;
   $("#expense-total").textContent = `${rm(sumExpenses())} total · Demo data`;
   $("#payment-schedule").innerHTML = getUpcomingExpenses().map((expense) => `
     <div class="schedule-row"><span class="date">${expense.date.replace(" 2026", "")}</span><div><strong>${expense.payee}</strong><small>${expense.category}</small></div><span class="status ${expense.status === "Forecast" ? "status--forecast" : expense.status === "New" ? "status--urgent" : ""}">${expense.status}</span><span class="amount">${rm(expense.amount)}</span></div>`).join("");
@@ -390,9 +426,18 @@ function automationModeLabel(mode) {
 
 function renderAutomationSummary() {
   const automation = state.automation;
+  const forecastValues = getAdjustedCashFlowPoints().filter((point) => point.kind === "forecast").map((point) => point.value);
+  const forecastLow = forecastValues.length ? Math.min(...forecastValues) : state.data.balances.total_business_cash;
+  const reserveGap = forecastLow - state.reserve;
   $("#automation-summary-title").textContent = automation.monitoring ? "Monitoring is active" : "Monitoring is paused";
   $("#sweep-summary-status").textContent = !automation.monitoring ? "Paused" : !automation.autoSweep ? "Turned off" : `Ready · ${automationModeLabel(automation.sweepMode)}`;
-  $("#pullback-summary-status").textContent = !automation.monitoring ? "Paused" : !automation.autoPullback ? "Turned off" : `Standing by · ${automationModeLabel(automation.pullbackMode)}`;
+  $("#pullback-summary-status").textContent = !automation.monitoring
+    ? "Paused"
+    : !automation.autoPullback
+      ? "Turned off"
+      : reserveGap < 0
+        ? `${rm(Math.min(Math.abs(reserveGap), automation.maxPullback))} may be needed · ${automationModeLabel(automation.pullbackMode)}`
+        : `Not needed · ${rm(reserveGap)} forecast buffer`;
 }
 
 function populateAutomationForm() {
@@ -503,6 +548,7 @@ function renderReports() {
   }));
   const report = reports[state.currentReport];
   const net = report.inflows - report.outflows;
+  const adjustedAverageSurplus = Math.max(0, report.average_surplus - (state.reserve - state.initialReserve));
   const cards = [
     ["Opening cash", report.opening_cash, "Start of month"],
     ["Net cash movement", net, "Inflows less outflows"],
@@ -540,7 +586,7 @@ function renderReports() {
     <div class="bar-chart-legend"><span><i class="legend-in"></i>Cash in · ${rm(report.inflows)}</span><span><i class="legend-out"></i>Cash out · ${rm(report.outflows)}</span></div>
     <div class="weekly-bars" role="img" aria-label="Illustrative weekly cash in and cash out for ${report.month}">${weeklyBars}</div>
     <p class="bar-chart-note">Illustrative weekly distribution of the simulated monthly totals.</p>`;
-  $("#report-note").innerHTML = `<span class="report-orb" aria-hidden="true">▥</span><span class="section-label">${report.month} summary</span><h3>${net >= 0 ? "Cash strengthened this month" : "Cash reduced this month"}</h3><p>Fictional inflows ${net >= 0 ? "exceeded" : "were below"} outflows by ${rm(Math.abs(net))}. Average estimated surplus was ${rm(report.average_surplus)}.</p><dl><div><dt>Average surplus</dt><dd>${rm(report.average_surplus)}</dd></div><div><dt>Indicative fund return</dt><dd>${rm(report.investment_return)}</dd></div><div><dt>Data status</dt><dd>Simulated</dd></div></dl>`;
+  $("#report-note").innerHTML = `<span class="report-orb" aria-hidden="true">▥</span><span class="section-label">${report.month} summary</span><h3>${net >= 0 ? "Cash strengthened this month" : "Cash reduced this month"}</h3><p>Fictional inflows ${net >= 0 ? "exceeded" : "were below"} outflows by ${rm(Math.abs(net))}. Average estimated surplus is ${rm(adjustedAverageSurplus)} using the current ${rm(state.reserve)} reserve.</p><dl><div><dt>Minimum reserve</dt><dd>${rm(state.reserve)}</dd></div><div><dt>Adjusted average surplus</dt><dd>${rm(adjustedAverageSurplus)}</dd></div><div><dt>Data status</dt><dd>Simulated</dd></div></dl>`;
 }
 
 function renderIntegrations() {
@@ -646,10 +692,13 @@ function updateReserveImpact() {
     return;
   }
   const estimatedSurplus = Math.max(0, state.data.balances.total_business_cash - value);
-  $("#reserve-impact").innerHTML = `Cash above the selected reserve would be <strong>${rm(estimatedSurplus)}</strong>. This setting does not place or change investments.`;
+  const forecastValues = getAdjustedCashFlowPoints().filter((point) => point.kind === "forecast").map((point) => point.value);
+  const forecastLow = forecastValues.length ? Math.min(...forecastValues) : state.data.balances.total_business_cash;
+  const forecastBuffer = forecastLow - value;
+  $("#reserve-impact").innerHTML = `Cash above the selected reserve would be <strong>${rm(estimatedSurplus)}</strong>. The dashboard would show ${forecastBuffer >= 0 ? `a forecast safety buffer of <strong>${rm(forecastBuffer)}</strong>` : `a forecast shortfall of <strong>${rm(Math.abs(forecastBuffer))}</strong>`}. This setting does not move money.`;
 }
 
-function saveSettings(event) {
+function requestSettingsSave(event) {
   event.preventDefault();
   const reserve = Number($("#reserve-input").value);
   $("#reserve-error").textContent = "";
@@ -658,14 +707,76 @@ function saveSettings(event) {
     $("#reserve-input").focus();
     return;
   }
-  state.reserve = reserve;
-  state.data.settings.notifications = {
+  state.pendingSettings = {
+    reserve,
     sweep_proposals: $("#notify-sweeps").checked,
     forecast_warnings: $("#notify-warnings").checked,
     weekly_summary: $("#notify-weekly").checked
   };
+  if (reserve !== state.reserve) {
+    openReserveAuth();
+    return;
+  }
+  applyPendingSettings(false);
+}
+
+function openReserveAuth() {
+  state.reserveAuthLastFocus = document.activeElement;
+  $("#reserve-auth-current").textContent = rm(state.reserve);
+  $("#reserve-auth-new").textContent = rm(state.pendingSettings.reserve);
+  $("#reserve-auth-surplus").textContent = rm(Math.max(0, state.data.balances.total_business_cash - state.pendingSettings.reserve));
+  $("#reserve-auth-password").value = "";
+  setFieldError($("#reserve-auth-password"), $("#reserve-auth-error"), "");
+  $("#reserve-auth-modal").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("#reserve-auth-password").focus();
+}
+
+function closeReserveAuth(restoreFocus = true) {
+  if ($("#reserve-auth-modal").hidden) return;
+  $("#reserve-auth-modal").hidden = true;
+  document.body.style.overflow = "";
+  state.pendingSettings = null;
+  if (restoreFocus && state.reserveAuthLastFocus) state.reserveAuthLastFocus.focus();
+}
+
+async function confirmReserveChange(event) {
+  event.preventDefault();
+  const passwordInput = $("#reserve-auth-password");
+  const password = passwordInput.value;
+  const session = readSession();
+  if (!password) {
+    setFieldError(passwordInput, $("#reserve-auth-error"), "Enter your current password to authorise this change.");
+    passwordInput.focus();
+    return;
+  }
+  if (!session?.passwordProof || await createPasswordProof(password) !== session.passwordProof) {
+    setFieldError(passwordInput, $("#reserve-auth-error"), "The password does not match this demo session.");
+    passwordInput.focus();
+    return;
+  }
+  applyPendingSettings(true);
+}
+
+function applyPendingSettings(reserveChanged) {
+  const settings = state.pendingSettings;
+  if (!settings) return;
+  state.reserve = settings.reserve;
+  state.data.settings.minimum_reserve = settings.reserve;
+  state.data.balances.reserved_cash = settings.reserve;
+  state.data.balances.estimated_surplus = Math.max(0, state.data.balances.total_business_cash - settings.reserve);
+  state.data.settings.notifications = {
+    sweep_proposals: settings.sweep_proposals,
+    forecast_warnings: settings.forecast_warnings,
+    weekly_summary: settings.weekly_summary
+  };
+  const session = readSession() || {};
+  session.reserve = settings.reserve;
+  sessionStorage.setItem("tunaiPintarDemoSession", JSON.stringify(session));
+  if (!$("#reserve-auth-modal").hidden) closeReserveAuth(false);
+  state.pendingSettings = null;
   renderAll();
-  showToast("Demo settings updated", "Your changes are temporary and were not saved to a server.");
+  showToast(reserveChanged ? "Safety guardrail updated" : "Demo settings updated", reserveChanged ? `The dashboard and forecast now use a ${rm(state.reserve)} minimum reserve. Your change remains in this browser session.` : "Your notification changes remain in this browser session.");
 }
 
 function toggleCompliance() {
@@ -691,7 +802,8 @@ function exportReport() {
     `Inflows: ${rm(report.inflows)}`,
     `Outflows: ${rm(report.outflows)}`,
     `Closing cash: ${rm(report.closing_cash)}`,
-    `Average estimated surplus: ${rm(report.average_surplus)}`,
+    `Minimum cash reserve: ${rm(state.reserve)}`,
+    `Average estimated surplus using current reserve: ${rm(Math.max(0, report.average_surplus - (state.reserve - state.initialReserve)))}`,
     `Indicative simulated investment return: ${rm(report.investment_return)}`
   ].join("\n");
   const url = URL.createObjectURL(new Blob([contents], { type: "text/plain" }));

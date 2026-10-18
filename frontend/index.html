@@ -304,7 +304,7 @@
                   <div class="settings-heading"><span class="settings-icon" aria-hidden="true">✓</span><div><h3>Investment preference</h3><p>Selected when you entered the prototype.</p></div></div>
                   <div class="preference-display"><div><strong id="settings-compliance">Shariah</strong><span id="settings-compliance-detail">Show Shariah-compliant fund examples</span></div><button class="button button--ghost" id="change-preference" type="button">Switch preference</button></div>
                 </article>
-                <div class="settings-actions"><p>Changes are temporary and are not saved to a server.</p><button class="button button--primary" type="submit">Save demo settings</button></div>
+                <div class="settings-actions"><p>A password confirmation window opens when the reserve is changed.</p><button class="button button--primary" type="submit">Save changes</button></div>
               </form>
             </section>
 
@@ -403,6 +403,27 @@
         <div class="automation-actions"><span id="automation-save-status" aria-live="polite">No unsaved changes</span><button class="button button--primary" type="submit">Save demo settings</button></div>
       </form>
     </aside>
+
+    <div class="modal-backdrop" id="reserve-auth-modal" hidden>
+      <form class="modal" id="reserve-auth-form" role="dialog" aria-modal="true" aria-labelledby="reserve-auth-title" novalidate>
+        <button class="modal-close" id="close-reserve-auth" type="button" aria-label="Close reserve confirmation">×</button>
+        <span class="modal-icon" aria-hidden="true">▣</span>
+        <span class="section-label">Protected setting</span>
+        <h2 id="reserve-auth-title">Authorise reserve change</h2>
+        <p>Review the new liquidity guardrail, then enter your current password to apply it across the dashboard and forecasts.</p>
+        <dl class="review-list reserve-review-list">
+          <div><dt>Current reserve</dt><dd id="reserve-auth-current">RM220,000</dd></div>
+          <div><dt>New reserve</dt><dd id="reserve-auth-new">RM220,000</dd></div>
+          <div><dt>Available surplus after change</dt><dd id="reserve-auth-surplus">RM208,600</dd></div>
+        </dl>
+        <div class="field reserve-auth-password">
+          <label for="reserve-auth-password">Current password</label>
+          <input id="reserve-auth-password" type="password" autocomplete="current-password" placeholder="Enter your password" aria-describedby="reserve-auth-error">
+          <span class="field-error" id="reserve-auth-error" aria-live="polite"></span>
+        </div>
+        <div class="modal-actions"><button class="button button--secondary" id="cancel-reserve-auth" type="button">Cancel</button><button class="button button--primary" type="submit">Confirm change</button></div>
+      </form>
+    </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden><span class="toast-icon" aria-hidden="true">✓</span><div><strong id="toast-title">Updated</strong><p id="toast-message"></p></div><button type="button" id="toast-close" aria-label="Dismiss notification">×</button></div>
 

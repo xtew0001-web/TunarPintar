@@ -566,6 +566,9 @@ td small { color: var(--muted); font-size: .62rem; }
 .review-list div { display: flex; justify-content: space-between; gap: 1rem; font-size: .73rem; }
 .review-list dt { color: var(--muted); }
 .review-list dd { margin: 0; font-weight: 750; text-align: right; }
+.reserve-review-list { margin-top: 1.2rem; }
+.reserve-auth-password { margin-top: 1rem; }
+.reserve-auth-password label { display: block; margin-bottom: .4rem; color: var(--ink); font-size: .7rem; font-weight: 750; }
 .confirmation-check { display: flex; align-items: flex-start; gap: .6rem; margin-top: 1rem; font-size: .72rem; cursor: pointer; }
 .confirmation-check input { margin-top: .2rem; accent-color: var(--teal-700); }
 .modal-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }
