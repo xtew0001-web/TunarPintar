@@ -298,6 +298,7 @@ async function loadDashboard() {
     if (!response.ok) throw new Error(`The demo API returned status ${response.status}.`);
     const data = await response.json();
     if (!data.meta || !data.balances || !Array.isArray(data.transactions)) throw new Error("The demo response is missing required fields.");
+    normalizeDemoIdentity(data);
     state.data = data;
     state.initialReserve = data.settings.minimum_reserve;
     const savedReserve = Number(readSession()?.reserve);
@@ -315,6 +316,17 @@ async function loadDashboard() {
     $("#error-state").hidden = false;
     $("#error-message").textContent = `${error.message} Check that the Flask server is running and backend/demo_data.json is valid, then try again.`;
   }
+}
+
+function normalizeDemoIdentity(data) {
+  data.company = {
+    ...data.company,
+    name: "Advanced Engineering Supplies Sdn. Bhd.",
+    display_name: "Advanced Engineering",
+    short_name: "AES"
+  };
+  const autoCount = data.integrations?.find((integration) => integration.id === "autocount");
+  if (autoCount) autoCount.account = "Advanced Engineering Supplies";
 }
 
 function renderAll() {
