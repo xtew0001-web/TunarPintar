@@ -32,6 +32,11 @@ const state = {
   automationLastFocus: null,
   reserveAuthLastFocus: null,
   automationDetailLastFocus: null,
+  activeAutomationDetail: null,
+  automationApprovals: {
+    sweep: false,
+    pullback: false
+  },
   pendingSettings: null,
   isLoggingIn: false,
   loginTimer: null,
@@ -51,6 +56,7 @@ const initials = (email) => (email || "Demo User").split(/[@.\s_-]/).filter(Bool
 document.addEventListener("DOMContentLoaded", () => {
   bindStaticEvents();
   Object.assign(state.automation, readAutomationSettings());
+  Object.assign(state.automationApprovals, readAutomationApprovals());
   state.automation.monitoring = true;
   const session = readSession();
   if (session?.passwordProof) {
@@ -124,6 +130,7 @@ function bindStaticEvents() {
     closeAutomationDetail(false);
     openAutomationDrawer();
   });
+  $("#approve-automation-action").addEventListener("click", approveAutomationAction);
   $("#close-automation").addEventListener("click", () => closeAutomationDrawer());
   $("#automation-drawer-backdrop").addEventListener("click", () => closeAutomationDrawer());
   $("#automation-form").addEventListener("submit", saveAutomationSettings);
@@ -162,6 +169,14 @@ function readSession() {
 function readAutomationSettings() {
   try {
     return JSON.parse(sessionStorage.getItem("tunaiPintarAutomationSettings")) || {};
+  } catch (_error) {
+    return {};
+  }
+}
+
+function readAutomationApprovals() {
+  try {
+    return JSON.parse(sessionStorage.getItem("tunaiPintarAutomationApprovals")) || {};
   } catch (_error) {
     return {};
   }
@@ -258,6 +273,7 @@ function logout() {
   resetLoginButton();
   sessionStorage.removeItem("tunaiPintarDemoSession");
   sessionStorage.removeItem("tunaiPintarAutomationSettings");
+  sessionStorage.removeItem("tunaiPintarAutomationApprovals");
   state.data = null;
   state.userEmail = "";
   state.profile = null;
@@ -448,18 +464,20 @@ function renderAutomationSummary() {
   const reserveGap = forecastLow - state.reserve;
   const surplus = state.data.balances.estimated_surplus;
   const sweepTriggered = automation.autoSweep && surplus >= automation.sweepTrigger;
-  const sweepNeedsReview = sweepTriggered && automation.sweepMode === "review";
+  const sweepRequiresReview = sweepTriggered && automation.sweepMode === "review";
+  const sweepNeedsReview = sweepRequiresReview && !state.automationApprovals.sweep;
   const pullbackTriggered = automation.autoPullback && reserveGap < 0;
-  const pullbackNeedsReview = pullbackTriggered && automation.pullbackMode === "review";
+  const pullbackRequiresReview = pullbackTriggered && automation.pullbackMode === "review";
+  const pullbackNeedsReview = pullbackRequiresReview && !state.automationApprovals.pullback;
   const sweepCard = $('[data-automation-detail="sweep"]');
   const pullbackCard = $('[data-automation-detail="pullback"]');
   $("#automation-summary-title").textContent = "Monitoring is active";
-  $("#sweep-summary-status").textContent = !automation.autoSweep ? "Turned off" : sweepNeedsReview ? "Review required" : "No review needed";
+  $("#sweep-summary-status").textContent = !automation.autoSweep ? "Turned off" : sweepNeedsReview ? "Review required" : sweepRequiresReview ? "Approved · No review needed" : "No review needed";
   $("#pullback-summary-status").textContent = !automation.autoPullback
       ? "Turned off"
       : pullbackNeedsReview
         ? `Review ${rm(Math.min(Math.abs(reserveGap), automation.maxPullback))} pull-back`
-        : "No review needed";
+        : pullbackRequiresReview ? "Approved · No review needed" : "No review needed";
   [sweepCard, pullbackCard].forEach((card) => card.classList.remove("status--review", "status--safe", "status--off"));
   sweepCard.classList.add(!automation.autoSweep ? "status--off" : sweepNeedsReview ? "status--review" : "status--safe");
   pullbackCard.classList.add(!automation.autoPullback ? "status--off" : pullbackNeedsReview ? "status--review" : "status--safe");
@@ -474,33 +492,48 @@ function automationDetailData(type) {
   if (type === "sweep") {
     const surplus = state.data.balances.estimated_surplus;
     const triggered = automation.autoSweep && surplus >= automation.sweepTrigger;
-    const needsReview = triggered && automation.sweepMode === "review";
+    const requiresReview = triggered && automation.sweepMode === "review";
+    const approved = requiresReview && state.automationApprovals.sweep;
+    const needsReview = requiresReview && !approved;
+    const proposedSweep = Math.min(state.data.investment.proposed_sweep.amount, surplus);
+    const postSweepCash = state.data.balances.total_business_cash - proposedSweep;
+    const differenceFromTrigger = surplus - automation.sweepTrigger;
     return {
       icon: "↗",
       title: "Auto-sweep details",
-      status: !automation.autoSweep ? "Turned off" : needsReview ? "Review required" : "No review needed",
+      status: !automation.autoSweep ? "Turned off" : needsReview ? "Review required" : approved ? "Approved · No review needed" : "No review needed",
       statusClass: !automation.autoSweep ? "status--off" : needsReview ? "status--review" : "status--safe",
-      description: "Auto-sweep compares cash available above the minimum reserve with your eligible-surplus trigger.",
-      metrics: [["Available surplus", rm(surplus)], ["Sweep trigger", rm(automation.sweepTrigger)], ["If triggered", automation.sweepMode === "review" ? "Require review" : "Simulate automatically"]],
-      next: !automation.autoSweep ? "This rule is turned off, so no proposal will be prepared." : needsReview ? "Surplus exceeds the trigger. A simulated sweep proposal is ready for human review." : triggered ? "Surplus exceeds the trigger and the rule is set to simulate automatically." : `No action is needed because surplus is ${rm(automation.sweepTrigger - surplus)} below the trigger.`
+      description: "Auto-sweep protects the minimum reserve first, then checks whether the remaining cash is high enough to prepare an investment proposal.",
+      metrics: [["Business cash", rm(state.data.balances.total_business_cash)], ["Protected reserve", rm(state.reserve)], ["Available surplus", rm(surplus)], ["Sweep trigger", rm(automation.sweepTrigger)], ["Proposed sweep", triggered ? rm(proposedSweep) : "None"], ["Post-sweep cash", triggered ? rm(postSweepCash) : "No change"]],
+      reason: triggered ? `${rm(state.data.balances.total_business_cash)} cash − ${rm(state.reserve)} reserve = ${rm(surplus)} available surplus. That is ${rm(differenceFromTrigger)} above the ${rm(automation.sweepTrigger)} trigger.` : `${rm(state.data.balances.total_business_cash)} cash − ${rm(state.reserve)} reserve = ${rm(surplus)} available surplus, which is ${rm(Math.abs(differenceFromTrigger))} below the trigger.`,
+      next: !automation.autoSweep ? "This rule is turned off, so no proposal will be prepared." : needsReview ? `A simulated ${rm(proposedSweep)} sweep is waiting for your approval. No money moves until you approve it.` : approved ? `You approved the ${rm(proposedSweep)} simulated sweep in this browser session. No real funds were moved.` : triggered ? `The ${rm(proposedSweep)} sweep meets the rule and is set to simulate automatically.` : "No proposal has been created because the trigger has not been reached.",
+      needsReview,
+      actionLabel: "Approve sweep"
     };
   }
   const shortfall = Math.max(0, state.reserve - forecastLow);
   const triggered = automation.autoPullback && shortfall > 0;
-  const needsReview = triggered && automation.pullbackMode === "review";
+  const requiresReview = triggered && automation.pullbackMode === "review";
+  const approved = requiresReview && state.automationApprovals.pullback;
+  const needsReview = requiresReview && !approved;
+  const proposedPullback = Math.min(shortfall, automation.maxPullback);
   return {
     icon: "↙",
     title: "Pull-back details",
-    status: !automation.autoPullback ? "Turned off" : needsReview ? "Review required" : "No review needed",
+    status: !automation.autoPullback ? "Turned off" : needsReview ? "Review required" : approved ? "Approved · No review needed" : "No review needed",
     statusClass: !automation.autoPullback ? "status--off" : needsReview ? "status--review" : "status--safe",
-    description: "Pull-back compares the lowest forecast cash balance with the protected minimum reserve.",
-    metrics: [["Forecast low", rm(forecastLow)], ["Minimum reserve", rm(state.reserve)], ["If triggered", automation.pullbackMode === "review" ? "Require review" : "Simulate automatically"]],
-    next: !automation.autoPullback ? "This rule is turned off, so no redemption will be prepared." : needsReview ? `Forecast cash is below the reserve. Review a simulated pull-back of up to ${rm(Math.min(shortfall, automation.maxPullback))}.` : triggered ? `A pull-back of up to ${rm(Math.min(shortfall, automation.maxPullback))} would be simulated automatically.` : `No pull-back is needed. Forecast cash remains ${rm(forecastLow - state.reserve)} above the reserve.`
+    description: "Pull-back checks whether forecast operating cash may fall below the protected reserve and prepares a redemption only when there is a shortfall.",
+    metrics: [["Forecast low", rm(forecastLow)], ["Minimum reserve", rm(state.reserve)], ["Forecast shortfall", shortfall ? rm(shortfall) : "None"], ["Maximum pull-back", rm(automation.maxPullback)], ["Proposed pull-back", triggered ? rm(proposedPullback) : "None"], ["If triggered", automation.pullbackMode === "review" ? "Require review" : "Simulate automatically"]],
+    reason: shortfall ? `${rm(state.reserve)} reserve − ${rm(forecastLow)} forecast low = ${rm(shortfall)} shortfall.` : `${rm(forecastLow)} forecast low − ${rm(state.reserve)} reserve = ${rm(forecastLow - state.reserve)} safety buffer. The pull-back rule has not triggered.`,
+    next: !automation.autoPullback ? "This rule is turned off, so no redemption will be prepared." : needsReview ? `A simulated ${rm(proposedPullback)} pull-back is waiting for your approval. No money moves until you approve it.` : approved ? `You approved the ${rm(proposedPullback)} simulated pull-back in this browser session. No real funds were moved.` : triggered ? `The ${rm(proposedPullback)} pull-back meets the rule and is set to simulate automatically.` : "No pull-back proposal exists because forecast cash remains above the reserve.",
+    needsReview,
+    actionLabel: "Approve pull-back"
   };
 }
 
 function openAutomationDetail(type) {
   const detail = automationDetailData(type);
+  state.activeAutomationDetail = type;
   state.automationDetailLastFocus = document.activeElement;
   $("#automation-detail-icon").textContent = detail.icon;
   $("#automation-detail-title").textContent = detail.title;
@@ -508,7 +541,10 @@ function openAutomationDetail(type) {
   $("#automation-detail-status").className = `automation-detail-status ${detail.statusClass}`;
   $("#automation-detail-description").textContent = detail.description;
   $("#automation-detail-metrics").innerHTML = detail.metrics.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join("");
+  $("#automation-detail-reason").textContent = detail.reason;
   $("#automation-detail-next").textContent = detail.next;
+  $("#approve-automation-action").hidden = !detail.needsReview;
+  $("#approve-automation-action").textContent = detail.actionLabel;
   $("#automation-detail-modal").hidden = false;
   document.body.style.overflow = "hidden";
   $("#close-automation-detail").focus();
@@ -518,7 +554,18 @@ function closeAutomationDetail(restoreFocus = true) {
   if ($("#automation-detail-modal").hidden) return;
   $("#automation-detail-modal").hidden = true;
   document.body.style.overflow = "";
+  state.activeAutomationDetail = null;
   if (restoreFocus && state.automationDetailLastFocus) state.automationDetailLastFocus.focus();
+}
+
+function approveAutomationAction() {
+  const type = state.activeAutomationDetail;
+  if (!type || !automationDetailData(type).needsReview) return;
+  state.automationApprovals[type] = true;
+  sessionStorage.setItem("tunaiPintarAutomationApprovals", JSON.stringify(state.automationApprovals));
+  closeAutomationDetail(false);
+  renderAutomationSummary();
+  showToast(type === "sweep" ? "Sweep approved" : "Pull-back approved", "Approval was recorded for this demo session only. No real funds were moved.");
 }
 
 function populateAutomationForm() {
@@ -587,7 +634,9 @@ function saveAutomationSettings(event) {
     sweepMode: $("#automation-sweep-mode").value,
     pullbackMode: $("#automation-pullback-mode").value
   };
+  state.automationApprovals = { sweep: false, pullback: false };
   sessionStorage.setItem("tunaiPintarAutomationSettings", JSON.stringify(state.automation));
+  sessionStorage.setItem("tunaiPintarAutomationApprovals", JSON.stringify(state.automationApprovals));
   renderAutomationSummary();
   $("#automation-save-status").textContent = "Demo settings saved";
   showToast("Automation settings updated", "Your choices are stored only for this browser session. No real investment action was created.");
@@ -852,6 +901,10 @@ function applyPendingSettings(reserveChanged) {
   const session = readSession() || {};
   session.reserve = settings.reserve;
   sessionStorage.setItem("tunaiPintarDemoSession", JSON.stringify(session));
+  if (reserveChanged) {
+    state.automationApprovals = { sweep: false, pullback: false };
+    sessionStorage.setItem("tunaiPintarAutomationApprovals", JSON.stringify(state.automationApprovals));
+  }
   if (!$("#reserve-auth-modal").hidden) closeReserveAuth(false);
   state.pendingSettings = null;
   renderAll();
