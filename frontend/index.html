@@ -391,9 +391,8 @@
             <div><span class="section-label">Automatic pull-back</span><h3>Protect operating cash</h3></div>
             <label class="automation-switch"><span class="sr-only">Enable automatic pull-back</span><input id="automation-pullback-enabled" type="checkbox" checked><i aria-hidden="true"></i></label>
           </div>
-          <p>When forecast cash falls below the protected floor, prepare a simulated redemption.</p>
+          <p>When forecast cash falls below the minimum cash reserve set in Settings, prepare a simulated redemption.</p>
           <div class="automation-fields">
-            <label><span>Protected cash floor</span><div class="currency-input"><b>RM</b><input id="automation-protected-floor" type="number" min="50000" max="400000" step="10000" value="220000"></div></label>
             <label><span>Maximum pull-back</span><div class="currency-input"><b>RM</b><input id="automation-pullback-max" type="number" min="10000" max="185000" step="10000" value="40000"></div></label>
             <label class="automation-field-wide"><span>Action mode</span><select id="automation-pullback-mode"><option value="review">Require review</option><option value="automatic">Simulate automatically</option></select></label>
           </div>

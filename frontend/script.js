@@ -24,7 +24,6 @@ const state = {
     autoSweep: true,
     autoPullback: true,
     sweepTrigger: 120000,
-    protectedFloor: 220000,
     maxPullback: 40000,
     sweepMode: "review",
     pullbackMode: "review"
@@ -402,7 +401,6 @@ function populateAutomationForm() {
   $("#automation-sweep-enabled").checked = automation.autoSweep;
   $("#automation-pullback-enabled").checked = automation.autoPullback;
   $("#automation-sweep-trigger").value = automation.sweepTrigger;
-  $("#automation-protected-floor").value = automation.protectedFloor;
   $("#automation-pullback-max").value = automation.maxPullback;
   $("#automation-sweep-mode").value = automation.sweepMode;
   $("#automation-pullback-mode").value = automation.pullbackMode;
@@ -448,14 +446,12 @@ function closeAutomationDrawer(restoreFocus = true) {
 function saveAutomationSettings(event) {
   event.preventDefault();
   const sweepTrigger = Number($("#automation-sweep-trigger").value);
-  const protectedFloor = Number($("#automation-protected-floor").value);
   const maxPullback = Number($("#automation-pullback-max").value);
   const invalidSweep = $("#automation-sweep-enabled").checked && (!Number.isFinite(sweepTrigger) || sweepTrigger < 10000 || sweepTrigger > 400000);
-  const invalidFloor = $("#automation-pullback-enabled").checked && (!Number.isFinite(protectedFloor) || protectedFloor < 50000 || protectedFloor > 400000);
   const invalidPullback = $("#automation-pullback-enabled").checked && (!Number.isFinite(maxPullback) || maxPullback < 10000 || maxPullback > state.data.investment.invested_balance);
-  if (invalidSweep || invalidFloor || invalidPullback) {
-    $("#automation-error").textContent = invalidSweep ? "Enter an auto-sweep trigger between RM10,000 and RM400,000." : invalidFloor ? "Enter a protected cash floor between RM50,000 and RM400,000." : `Enter a maximum pull-back between RM10,000 and ${rm(state.data.investment.invested_balance)}.`;
-    (invalidSweep ? $("#automation-sweep-trigger") : invalidFloor ? $("#automation-protected-floor") : $("#automation-pullback-max")).focus();
+  if (invalidSweep || invalidPullback) {
+    $("#automation-error").textContent = invalidSweep ? "Enter an auto-sweep trigger between RM10,000 and RM400,000." : `Enter a maximum pull-back between RM10,000 and ${rm(state.data.investment.invested_balance)}.`;
+    (invalidSweep ? $("#automation-sweep-trigger") : $("#automation-pullback-max")).focus();
     return;
   }
   state.automation = {
@@ -463,7 +459,6 @@ function saveAutomationSettings(event) {
     autoSweep: $("#automation-sweep-enabled").checked,
     autoPullback: $("#automation-pullback-enabled").checked,
     sweepTrigger,
-    protectedFloor,
     maxPullback,
     sweepMode: $("#automation-sweep-mode").value,
     pullbackMode: $("#automation-pullback-mode").value
