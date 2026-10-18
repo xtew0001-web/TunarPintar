@@ -26,6 +26,13 @@ does not make the prototype a real financial system. There is no frontend
 framework, charting package, real authentication, bank connection, or real
 financial integration. One Flask server serves both the frontend and API.
 
+The current Supabase record is seeded demonstration data for the fictional
+**Advanced Engineering Supplies Sdn. Bhd.** workspace. In a production version,
+Supabase Auth would identify each customer, relational tables would store that
+customer's business records, and Row Level Security would isolate every
+business's data. The prototype does not claim that this multi-customer storage
+is implemented yet.
+
 ## Project structure
 
 ```text
@@ -92,6 +99,12 @@ The app uses `backend/demo_data.json` unless `DATA_SOURCE=supabase` is set.
 Supabase stores one read-only copy of the same fictional dataset in the
 `demo_snapshots` table. If the Supabase request fails, Flask logs the error and
 returns the local JSON automatically.
+
+This single snapshot is intentionally simple for the assignment demo. A future
+customer-ready version should replace it with separate tables for businesses,
+profiles, cash accounts, cash-flow entries, investments, treasury settings and
+automation approvals, all linked by business ID and protected with Row Level
+Security.
 
 After creating the table and Row Level Security policy, open the Supabase
 project's **Connect** dialog to copy the project URL and publishable key. All
@@ -202,9 +215,10 @@ request, while JavaScript receives the same response structure in either mode.
 The primary prototype calculation is:
 
 ```text
-estimated surplus = total business cash - selected minimum reserve
-proposed sweep = lower of the original demo proposal or current estimated surplus
-remaining buffer = post-sweep cash - selected minimum reserve
+current available surplus = total business cash - selected minimum reserve
+forecast-safe surplus = lowest forecast cash - selected minimum reserve
+proposed sweep = lower of the original demo proposal or forecast-safe surplus
+forecast liquidity remaining = lowest forecast cash - proposed sweep
 ```
 
 Changing settings, confirming a sweep, connecting an integration, or choosing notification preferences only changes in-memory browser state. The JSON file is not edited, so refreshing returns to its starting values.

@@ -7,8 +7,9 @@
     "disclaimer": "All figures, forecasts, recommendations and transactions are fictional and simulated. Returns are not guaranteed."
   },
   "company": {
-    "name": "Nusantara Supply Sdn. Bhd.",
-    "short_name": "NS",
+    "name": "Advanced Engineering Supplies Sdn. Bhd.",
+    "display_name": "Advanced Engineering",
+    "short_name": "AES",
     "industry": "Wholesale distribution",
     "location": "Shah Alam, Selangor"
   },
@@ -91,7 +92,7 @@
   "integrations": [
     {"id": "maybank", "name": "Maybank Business", "type": "Bank", "status": "Connected", "account": "Business Current ••4821", "last_sync": "4 Oct 2026, 8:58 AM"},
     {"id": "cimb", "name": "CIMB BizChannel", "type": "Bank", "status": "Connected", "account": "Operating Account ••9064", "last_sync": "4 Oct 2026, 8:55 AM"},
-    {"id": "autocount", "name": "AutoCount Cloud", "type": "Accounting", "status": "Connected", "account": "Nusantara Supply", "last_sync": "4 Oct 2026, 8:51 AM"},
+    {"id": "autocount", "name": "AutoCount Cloud", "type": "Accounting", "status": "Connected", "account": "Advanced Engineering Supplies", "last_sync": "4 Oct 2026, 8:51 AM"},
     {"id": "xero", "name": "Xero", "type": "Accounting", "status": "Available", "account": "Not connected", "last_sync": "Never"}
   ],
   "settings": {

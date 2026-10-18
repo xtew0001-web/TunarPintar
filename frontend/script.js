@@ -80,7 +80,7 @@ function bindStaticEvents() {
     if ($("#password").value.trim()) setFieldError($("#password"), $("#password-error"), "");
   });
   $("#logout-button").addEventListener("click", logout);
-  $("#demo-info-button").addEventListener("click", () => showToast("Demo data", "All balances, forecasts, transactions and recommendations in this workspace are fictional and simulated."));
+  $("#demo-info-button").addEventListener("click", () => showToast("Seeded Supabase demo", "This prototype uses fictional seeded data from Supabase. In production, each authenticated customer's business data would be stored separately and protected by access controls."));
   $("#retry-button").addEventListener("click", loadDashboard);
   $("#menu-button").addEventListener("click", openSidebar);
   $("#sidebar-close").addEventListener("click", closeSidebar);
@@ -318,6 +318,7 @@ async function loadDashboard() {
 }
 
 function renderAll() {
+  renderCompanyIdentity();
   renderDashboard();
   renderCashFlow();
   renderInvestments();
@@ -326,6 +327,17 @@ function renderAll() {
   renderIntegrations();
   renderSettings();
   renderProfile();
+}
+
+function renderCompanyIdentity() {
+  if (!state.data?.company) return;
+  const company = state.data.company;
+  const displayName = company.display_name || company.name.replace(/\s+Sdn\.\s+Bhd\.$/i, "");
+  $("#workspace-name").textContent = displayName;
+  $("#workspace-avatar").textContent = company.short_name;
+  $("#workspace-chip").setAttribute("aria-label", `Open ${displayName} business profile`);
+  $("#dashboard-heading").textContent = `Good morning, ${displayName}`;
+  $("#business-profile-avatar").textContent = company.short_name;
 }
 
 function routeFromHash() {
@@ -462,8 +474,8 @@ function renderAutomationSummary() {
   const forecastValues = getAdjustedCashFlowPoints().filter((point) => point.kind === "forecast").map((point) => point.value);
   const forecastLow = forecastValues.length ? Math.min(...forecastValues) : state.data.balances.total_business_cash;
   const reserveGap = forecastLow - state.reserve;
-  const surplus = state.data.balances.estimated_surplus;
-  const sweepTriggered = automation.autoSweep && surplus >= automation.sweepTrigger;
+  const forecastSafeSurplus = Math.max(0, reserveGap);
+  const sweepTriggered = automation.autoSweep && forecastSafeSurplus >= automation.sweepTrigger;
   const sweepRequiresReview = sweepTriggered && automation.sweepMode === "review";
   const sweepNeedsReview = sweepRequiresReview && !state.automationApprovals.sweep;
   const pullbackTriggered = automation.autoPullback && reserveGap < 0;
@@ -490,20 +502,20 @@ function automationDetailData(type) {
   const forecastValues = getAdjustedCashFlowPoints().filter((point) => point.kind === "forecast").map((point) => point.value);
   const forecastLow = forecastValues.length ? Math.min(...forecastValues) : state.data.balances.total_business_cash;
   if (type === "sweep") {
-    const surplus = state.data.balances.estimated_surplus;
-    const triggered = automation.autoSweep && surplus >= automation.sweepTrigger;
+    const forecastSafeSurplus = Math.max(0, forecastLow - state.reserve);
+    const triggered = automation.autoSweep && forecastSafeSurplus >= automation.sweepTrigger;
     const requiresReview = triggered && automation.sweepMode === "review";
     const approved = requiresReview && state.automationApprovals.sweep;
     const needsReview = requiresReview && !approved;
-    const proposedSweep = Math.min(state.data.investment.proposed_sweep.amount, surplus);
-    const postSweepCash = state.data.balances.total_business_cash - proposedSweep;
+    const proposedSweep = Math.min(state.data.investment.proposed_sweep.amount, forecastSafeSurplus);
+    const forecastLiquidityRemaining = forecastLow - proposedSweep;
     return {
       icon: "↗",
       title: "Auto-sweep details",
       status: !automation.autoSweep ? "Turned off" : needsReview ? "Review required" : approved ? "Approved · No review needed" : "No review needed",
       statusClass: !automation.autoSweep ? "status--off" : needsReview ? "status--review" : "status--safe",
-      description: "A concise view of the available surplus, proposed sweep, and cash remaining afterward.",
-      metrics: [["Available surplus", rm(surplus)], ["Sweep amount", triggered ? rm(proposedSweep) : "None"], ["Liquidity remaining", triggered ? rm(postSweepCash) : rm(state.data.balances.total_business_cash)]],
+      description: "A concise view of surplus that remains safe across the forecast, the proposed sweep, and forecast liquidity afterward.",
+      metrics: [["Forecast-safe surplus", rm(forecastSafeSurplus)], ["Sweep amount", triggered ? rm(proposedSweep) : "None"], ["Forecast liquidity remaining", triggered ? rm(forecastLiquidityRemaining) : rm(forecastLow)]],
       next: !automation.autoSweep ? "This rule is turned off, so no proposal will be prepared." : needsReview ? `A simulated ${rm(proposedSweep)} sweep is waiting for your approval. No money moves until you approve it.` : approved ? `You approved the ${rm(proposedSweep)} simulated sweep in this browser session. No real funds were moved.` : triggered ? `The ${rm(proposedSweep)} sweep meets the rule and is set to simulate automatically.` : "No proposal has been created because the trigger has not been reached.",
       needsReview,
       actionLabel: "Approve sweep"

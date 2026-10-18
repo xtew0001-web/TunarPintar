@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#0F766E">
     <title>TunaiPintar — SME Treasury Demo</title>
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/style.css?v=20261018-5">
+    <link rel="stylesheet" href="/style.css?v=20261018-6">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -110,9 +110,9 @@
           </a>
           <button class="icon-button sidebar-close" id="sidebar-close" type="button" aria-label="Close navigation">×</button>
         </div>
-        <a class="workspace-chip" href="#profile" aria-label="Open Nusantara Supply business profile">
-          <span class="company-avatar">NS</span>
-          <div><strong>Nusantara Supply</strong><small>Demo workspace</small></div>
+        <a class="workspace-chip" id="workspace-chip" href="#profile" aria-label="Open Advanced Engineering business profile">
+          <span class="company-avatar" id="workspace-avatar">AES</span>
+          <div><strong id="workspace-name">Advanced Engineering</strong><small>Seeded demo workspace</small></div>
         </a>
         <nav class="sidebar-nav">
           <a href="#dashboard" data-view="dashboard" class="active"><span class="nav-icon" aria-hidden="true">⌂</span>Dashboard</a>
@@ -161,7 +161,7 @@
           <div id="workspace" hidden>
             <section class="view active" id="view-dashboard" data-view-panel="dashboard" aria-labelledby="dashboard-heading">
               <div class="welcome-row">
-                <div><span class="eyebrow">Sunday, 4 October</span><h2 id="dashboard-heading">Good morning, Nusantara Supply</h2><p>Here is the latest view of your liquidity and simulated treasury opportunity.</p></div>
+                <div><span class="eyebrow">Sunday, 4 October</span><h2 id="dashboard-heading">Good morning, Advanced Engineering</h2><p>Here is the latest view of your liquidity and simulated treasury opportunity.</p></div>
                 <a class="button button--primary" href="#investments">View investment portfolio</a>
               </div>
 
@@ -334,7 +334,7 @@
                 </form>
 
                 <article class="card business-profile">
-                  <div class="business-profile-head"><span class="company-avatar company-avatar--large">NS</span><div><span class="section-label">Business profile</span><h3 id="business-profile-name">Nusantara Supply Sdn. Bhd.</h3><p>Primary treasury workspace</p></div></div>
+                  <div class="business-profile-head"><span class="company-avatar company-avatar--large" id="business-profile-avatar">AES</span><div><span class="section-label">Business profile</span><h3 id="business-profile-name">Advanced Engineering Supplies Sdn. Bhd.</h3><p>Primary treasury workspace</p></div></div>
                   <dl class="business-details">
                     <div><dt>Industry</dt><dd id="business-profile-industry">Wholesale distribution</dd></div>
                     <div><dt>Location</dt><dd id="business-profile-location">Shah Alam, Selangor</dd></div>
@@ -377,7 +377,7 @@
             <div><span class="section-label">Auto-sweep</span><h3>Invest eligible surplus</h3></div>
             <label class="automation-switch"><span class="sr-only">Enable auto-sweep</span><input id="automation-sweep-enabled" type="checkbox" checked><i aria-hidden="true"></i></label>
           </div>
-          <p>When safe surplus exceeds the trigger, prepare a simulated investment action.</p>
+          <p>When forecast-safe surplus exceeds the trigger, prepare a simulated investment action without reducing forecast cash below the protected reserve.</p>
           <div class="automation-fields">
             <label><span>Minimum eligible surplus</span><div class="currency-input"><b>RM</b><input id="automation-sweep-trigger" type="number" min="10000" max="400000" step="10000" value="120000"></div></label>
             <label><span>Action mode</span><select id="automation-sweep-mode"><option value="review">Require review</option><option value="automatic">Simulate automatically</option></select></label>
@@ -440,6 +440,6 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden><span class="toast-icon" aria-hidden="true">✓</span><div><strong id="toast-title">Updated</strong><p id="toast-message"></p></div><button type="button" id="toast-close" aria-label="Dismiss notification">×</button></div>
 
-    <script src="/script.js?v=20261018-5" defer></script>
+    <script src="/script.js?v=20261018-7" defer></script>
   </body>
 </html>
