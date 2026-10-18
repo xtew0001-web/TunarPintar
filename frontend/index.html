@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#0F766E">
     <title>TunaiPintar — SME Treasury Demo</title>
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/style.css?v=20261018-3">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -235,8 +235,8 @@
                   <button class="button button--secondary" id="open-automation" type="button">Open automation details</button>
                 </div>
                 <div class="automation-summary-grid">
-                  <div><span class="automation-mini-icon" aria-hidden="true">↗</span><span><strong>Auto-sweep</strong><small id="sweep-summary-status">Ready · Review required</small></span></div>
-                  <div><span class="automation-mini-icon" aria-hidden="true">↙</span><span><strong>Pull-back</strong><small id="pullback-summary-status">Standing by · Review required</small></span></div>
+                  <button class="automation-summary-item" type="button" data-automation-detail="sweep"><span class="automation-mini-icon" aria-hidden="true">↗</span><span><strong>Auto-sweep</strong><small id="sweep-summary-status">Ready · Review required</small></span><span class="summary-chevron" aria-hidden="true">›</span></button>
+                  <button class="automation-summary-item" type="button" data-automation-detail="pullback"><span class="automation-mini-icon" aria-hidden="true">↙</span><span><strong>Pull-back</strong><small id="pullback-summary-status">No review needed</small></span><span class="summary-chevron" aria-hidden="true">›</span></button>
                   <div><span class="automation-mini-icon" aria-hidden="true">◷</span><span><strong>Last checked</strong><small>Today, 9:00 AM</small></span></div>
                 </div>
               </article>
@@ -365,11 +365,10 @@
         <button class="modal-close" id="close-automation" type="button" aria-label="Close automation settings">×</button>
       </div>
 
-      <label class="automation-master-row">
+      <div class="automation-master-row" aria-label="Background monitoring status">
         <span><strong>Background monitoring</strong><small>Check cash forecasts and protection rules</small></span>
-        <input id="automation-monitoring" type="checkbox" checked>
-        <i aria-hidden="true"></i>
-      </label>
+        <span class="monitoring-status"><i aria-hidden="true"></i>Always active</span>
+      </div>
 
       <form id="automation-form">
         <section class="automation-rule" id="automation-sweep-rule">
@@ -394,7 +393,7 @@
           <p>When forecast cash falls below the minimum cash reserve set in Settings, prepare a simulated redemption.</p>
           <div class="automation-fields">
             <label><span>Maximum pull-back</span><div class="currency-input"><b>RM</b><input id="automation-pullback-max" type="number" min="10000" max="185000" step="10000" value="40000"></div></label>
-            <label class="automation-field-wide"><span>Action mode</span><select id="automation-pullback-mode"><option value="review">Require review</option><option value="automatic">Simulate automatically</option></select></label>
+            <label><span>Action mode</span><select id="automation-pullback-mode"><option value="review">Require review</option><option value="automatic">Simulate automatically</option></select></label>
           </div>
         </section>
 
@@ -403,6 +402,20 @@
         <div class="automation-actions"><span id="automation-save-status" aria-live="polite">No unsaved changes</span><button class="button button--primary" type="submit">Save demo settings</button></div>
       </form>
     </aside>
+
+    <div class="modal-backdrop" id="automation-detail-modal" hidden>
+      <section class="modal automation-detail-modal" role="dialog" aria-modal="true" aria-labelledby="automation-detail-title">
+        <button class="modal-close" id="close-automation-detail" type="button" aria-label="Close automation details">×</button>
+        <span class="modal-icon" id="automation-detail-icon" aria-hidden="true">↗</span>
+        <span class="section-label">Automation status</span>
+        <h2 id="automation-detail-title">Auto-sweep details</h2>
+        <span class="automation-detail-status" id="automation-detail-status">Review required</span>
+        <p id="automation-detail-description"></p>
+        <dl class="review-list" id="automation-detail-metrics"></dl>
+        <div class="automation-detail-next"><strong>What happens next</strong><p id="automation-detail-next"></p></div>
+        <div class="modal-actions"><button class="button button--secondary" id="dismiss-automation-detail" type="button">Close</button><button class="button button--primary" id="automation-detail-settings" type="button">Open automation settings</button></div>
+      </section>
+    </div>
 
     <div class="modal-backdrop" id="reserve-auth-modal" hidden>
       <form class="modal" id="reserve-auth-form" role="dialog" aria-modal="true" aria-labelledby="reserve-auth-title" novalidate>
@@ -427,6 +440,6 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden><span class="toast-icon" aria-hidden="true">✓</span><div><strong id="toast-title">Updated</strong><p id="toast-message"></p></div><button type="button" id="toast-close" aria-label="Dismiss notification">×</button></div>
 
-    <script src="/script.js" defer></script>
+    <script src="/script.js?v=20261018-3" defer></script>
   </body>
 </html>

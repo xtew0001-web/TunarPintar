@@ -31,6 +31,7 @@ const state = {
   },
   automationLastFocus: null,
   reserveAuthLastFocus: null,
+  automationDetailLastFocus: null,
   pendingSettings: null,
   isLoggingIn: false,
   loginTimer: null,
@@ -50,6 +51,7 @@ const initials = (email) => (email || "Demo User").split(/[@.\s_-]/).filter(Bool
 document.addEventListener("DOMContentLoaded", () => {
   bindStaticEvents();
   Object.assign(state.automation, readAutomationSettings());
+  state.automation.monitoring = true;
   const session = readSession();
   if (session?.passwordProof) {
     state.compliance = session.compliance || "Shariah";
@@ -112,6 +114,16 @@ function bindStaticEvents() {
   $("#change-preference").addEventListener("click", toggleCompliance);
   $("#export-report").addEventListener("click", exportReport);
   $("#open-automation").addEventListener("click", openAutomationDrawer);
+  $$('[data-automation-detail]').forEach((button) => button.addEventListener("click", () => openAutomationDetail(button.dataset.automationDetail)));
+  $("#close-automation-detail").addEventListener("click", () => closeAutomationDetail());
+  $("#dismiss-automation-detail").addEventListener("click", () => closeAutomationDetail());
+  $("#automation-detail-modal").addEventListener("click", (event) => {
+    if (event.target === $("#automation-detail-modal")) closeAutomationDetail();
+  });
+  $("#automation-detail-settings").addEventListener("click", () => {
+    closeAutomationDetail(false);
+    openAutomationDrawer();
+  });
   $("#close-automation").addEventListener("click", () => closeAutomationDrawer());
   $("#automation-drawer-backdrop").addEventListener("click", () => closeAutomationDrawer());
   $("#automation-form").addEventListener("submit", saveAutomationSettings);
@@ -121,6 +133,10 @@ function bindStaticEvents() {
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
+      if (!$("#automation-detail-modal").hidden) {
+        closeAutomationDetail();
+        return;
+      }
       if (!$("#reserve-auth-modal").hidden) {
         closeReserveAuth();
         return;
@@ -250,6 +266,7 @@ function logout() {
   $("#login-screen").hidden = false;
   $("#password").value = "";
   document.title = "TunaiPintar — SME Treasury Demo";
+  closeAutomationDetail(false);
   closeReserveAuth(false);
   closeAutomationDrawer(false);
   closeSidebar();
@@ -429,20 +446,83 @@ function renderAutomationSummary() {
   const forecastValues = getAdjustedCashFlowPoints().filter((point) => point.kind === "forecast").map((point) => point.value);
   const forecastLow = forecastValues.length ? Math.min(...forecastValues) : state.data.balances.total_business_cash;
   const reserveGap = forecastLow - state.reserve;
-  $("#automation-summary-title").textContent = automation.monitoring ? "Monitoring is active" : "Monitoring is paused";
-  $("#sweep-summary-status").textContent = !automation.monitoring ? "Paused" : !automation.autoSweep ? "Turned off" : `Ready · ${automationModeLabel(automation.sweepMode)}`;
-  $("#pullback-summary-status").textContent = !automation.monitoring
-    ? "Paused"
-    : !automation.autoPullback
+  const surplus = state.data.balances.estimated_surplus;
+  const sweepTriggered = automation.autoSweep && surplus >= automation.sweepTrigger;
+  const sweepNeedsReview = sweepTriggered && automation.sweepMode === "review";
+  const pullbackTriggered = automation.autoPullback && reserveGap < 0;
+  const pullbackNeedsReview = pullbackTriggered && automation.pullbackMode === "review";
+  const sweepCard = $('[data-automation-detail="sweep"]');
+  const pullbackCard = $('[data-automation-detail="pullback"]');
+  $("#automation-summary-title").textContent = "Monitoring is active";
+  $("#sweep-summary-status").textContent = !automation.autoSweep ? "Turned off" : sweepNeedsReview ? "Review required" : "No review needed";
+  $("#pullback-summary-status").textContent = !automation.autoPullback
       ? "Turned off"
-      : reserveGap < 0
-        ? `${rm(Math.min(Math.abs(reserveGap), automation.maxPullback))} may be needed · ${automationModeLabel(automation.pullbackMode)}`
-        : `Not needed · ${rm(reserveGap)} forecast buffer`;
+      : pullbackNeedsReview
+        ? `Review ${rm(Math.min(Math.abs(reserveGap), automation.maxPullback))} pull-back`
+        : "No review needed";
+  [sweepCard, pullbackCard].forEach((card) => card.classList.remove("status--review", "status--safe", "status--off"));
+  sweepCard.classList.add(!automation.autoSweep ? "status--off" : sweepNeedsReview ? "status--review" : "status--safe");
+  pullbackCard.classList.add(!automation.autoPullback ? "status--off" : pullbackNeedsReview ? "status--review" : "status--safe");
+  sweepCard.setAttribute("aria-label", `Auto-sweep: ${$("#sweep-summary-status").textContent}. Open details.`);
+  pullbackCard.setAttribute("aria-label", `Pull-back: ${$("#pullback-summary-status").textContent}. Open details.`);
+}
+
+function automationDetailData(type) {
+  const automation = state.automation;
+  const forecastValues = getAdjustedCashFlowPoints().filter((point) => point.kind === "forecast").map((point) => point.value);
+  const forecastLow = forecastValues.length ? Math.min(...forecastValues) : state.data.balances.total_business_cash;
+  if (type === "sweep") {
+    const surplus = state.data.balances.estimated_surplus;
+    const triggered = automation.autoSweep && surplus >= automation.sweepTrigger;
+    const needsReview = triggered && automation.sweepMode === "review";
+    return {
+      icon: "↗",
+      title: "Auto-sweep details",
+      status: !automation.autoSweep ? "Turned off" : needsReview ? "Review required" : "No review needed",
+      statusClass: !automation.autoSweep ? "status--off" : needsReview ? "status--review" : "status--safe",
+      description: "Auto-sweep compares cash available above the minimum reserve with your eligible-surplus trigger.",
+      metrics: [["Available surplus", rm(surplus)], ["Sweep trigger", rm(automation.sweepTrigger)], ["If triggered", automation.sweepMode === "review" ? "Require review" : "Simulate automatically"]],
+      next: !automation.autoSweep ? "This rule is turned off, so no proposal will be prepared." : needsReview ? "Surplus exceeds the trigger. A simulated sweep proposal is ready for human review." : triggered ? "Surplus exceeds the trigger and the rule is set to simulate automatically." : `No action is needed because surplus is ${rm(automation.sweepTrigger - surplus)} below the trigger.`
+    };
+  }
+  const shortfall = Math.max(0, state.reserve - forecastLow);
+  const triggered = automation.autoPullback && shortfall > 0;
+  const needsReview = triggered && automation.pullbackMode === "review";
+  return {
+    icon: "↙",
+    title: "Pull-back details",
+    status: !automation.autoPullback ? "Turned off" : needsReview ? "Review required" : "No review needed",
+    statusClass: !automation.autoPullback ? "status--off" : needsReview ? "status--review" : "status--safe",
+    description: "Pull-back compares the lowest forecast cash balance with the protected minimum reserve.",
+    metrics: [["Forecast low", rm(forecastLow)], ["Minimum reserve", rm(state.reserve)], ["If triggered", automation.pullbackMode === "review" ? "Require review" : "Simulate automatically"]],
+    next: !automation.autoPullback ? "This rule is turned off, so no redemption will be prepared." : needsReview ? `Forecast cash is below the reserve. Review a simulated pull-back of up to ${rm(Math.min(shortfall, automation.maxPullback))}.` : triggered ? `A pull-back of up to ${rm(Math.min(shortfall, automation.maxPullback))} would be simulated automatically.` : `No pull-back is needed. Forecast cash remains ${rm(forecastLow - state.reserve)} above the reserve.`
+  };
+}
+
+function openAutomationDetail(type) {
+  const detail = automationDetailData(type);
+  state.automationDetailLastFocus = document.activeElement;
+  $("#automation-detail-icon").textContent = detail.icon;
+  $("#automation-detail-title").textContent = detail.title;
+  $("#automation-detail-status").textContent = detail.status;
+  $("#automation-detail-status").className = `automation-detail-status ${detail.statusClass}`;
+  $("#automation-detail-description").textContent = detail.description;
+  $("#automation-detail-metrics").innerHTML = detail.metrics.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join("");
+  $("#automation-detail-next").textContent = detail.next;
+  $("#automation-detail-modal").hidden = false;
+  document.body.style.overflow = "hidden";
+  $("#close-automation-detail").focus();
+}
+
+function closeAutomationDetail(restoreFocus = true) {
+  if ($("#automation-detail-modal").hidden) return;
+  $("#automation-detail-modal").hidden = true;
+  document.body.style.overflow = "";
+  if (restoreFocus && state.automationDetailLastFocus) state.automationDetailLastFocus.focus();
 }
 
 function populateAutomationForm() {
   const automation = state.automation;
-  $("#automation-monitoring").checked = automation.monitoring;
   $("#automation-sweep-enabled").checked = automation.autoSweep;
   $("#automation-pullback-enabled").checked = automation.autoPullback;
   $("#automation-sweep-trigger").value = automation.sweepTrigger;
@@ -455,9 +535,8 @@ function populateAutomationForm() {
 }
 
 function updateAutomationAvailability() {
-  const monitoring = $("#automation-monitoring").checked;
-  const sweepEnabled = monitoring && $("#automation-sweep-enabled").checked;
-  const pullbackEnabled = monitoring && $("#automation-pullback-enabled").checked;
+  const sweepEnabled = $("#automation-sweep-enabled").checked;
+  const pullbackEnabled = $("#automation-pullback-enabled").checked;
   $("#automation-sweep-rule").classList.toggle("is-disabled", !sweepEnabled);
   $("#automation-pullback-rule").classList.toggle("is-disabled", !pullbackEnabled);
   $$("input[type='number'], select", $("#automation-sweep-rule")).forEach((control) => { control.disabled = !sweepEnabled; });
@@ -500,7 +579,7 @@ function saveAutomationSettings(event) {
     return;
   }
   state.automation = {
-    monitoring: $("#automation-monitoring").checked,
+    monitoring: true,
     autoSweep: $("#automation-sweep-enabled").checked,
     autoPullback: $("#automation-pullback-enabled").checked,
     sweepTrigger,
