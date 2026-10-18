@@ -497,15 +497,13 @@ function automationDetailData(type) {
     const needsReview = requiresReview && !approved;
     const proposedSweep = Math.min(state.data.investment.proposed_sweep.amount, surplus);
     const postSweepCash = state.data.balances.total_business_cash - proposedSweep;
-    const differenceFromTrigger = surplus - automation.sweepTrigger;
     return {
       icon: "↗",
       title: "Auto-sweep details",
       status: !automation.autoSweep ? "Turned off" : needsReview ? "Review required" : approved ? "Approved · No review needed" : "No review needed",
       statusClass: !automation.autoSweep ? "status--off" : needsReview ? "status--review" : "status--safe",
-      description: "Auto-sweep protects the minimum reserve first, then checks whether the remaining cash is high enough to prepare an investment proposal.",
-      metrics: [["Business cash", rm(state.data.balances.total_business_cash)], ["Protected reserve", rm(state.reserve)], ["Available surplus", rm(surplus)], ["Sweep trigger", rm(automation.sweepTrigger)], ["Proposed sweep", triggered ? rm(proposedSweep) : "None"], ["Post-sweep cash", triggered ? rm(postSweepCash) : "No change"]],
-      reason: triggered ? `${rm(state.data.balances.total_business_cash)} cash − ${rm(state.reserve)} reserve = ${rm(surplus)} available surplus. That is ${rm(differenceFromTrigger)} above the ${rm(automation.sweepTrigger)} trigger.` : `${rm(state.data.balances.total_business_cash)} cash − ${rm(state.reserve)} reserve = ${rm(surplus)} available surplus, which is ${rm(Math.abs(differenceFromTrigger))} below the trigger.`,
+      description: "A concise view of the available surplus, proposed sweep, and cash remaining afterward.",
+      metrics: [["Available surplus", rm(surplus)], ["Sweep amount", triggered ? rm(proposedSweep) : "None"], ["Liquidity remaining", triggered ? rm(postSweepCash) : rm(state.data.balances.total_business_cash)]],
       next: !automation.autoSweep ? "This rule is turned off, so no proposal will be prepared." : needsReview ? `A simulated ${rm(proposedSweep)} sweep is waiting for your approval. No money moves until you approve it.` : approved ? `You approved the ${rm(proposedSweep)} simulated sweep in this browser session. No real funds were moved.` : triggered ? `The ${rm(proposedSweep)} sweep meets the rule and is set to simulate automatically.` : "No proposal has been created because the trigger has not been reached.",
       needsReview,
       actionLabel: "Approve sweep"
@@ -517,14 +515,14 @@ function automationDetailData(type) {
   const approved = requiresReview && state.automationApprovals.pullback;
   const needsReview = requiresReview && !approved;
   const proposedPullback = Math.min(shortfall, automation.maxPullback);
+  const liquidityAfterPullback = forecastLow + proposedPullback;
   return {
     icon: "↙",
     title: "Pull-back details",
     status: !automation.autoPullback ? "Turned off" : needsReview ? "Review required" : approved ? "Approved · No review needed" : "No review needed",
     statusClass: !automation.autoPullback ? "status--off" : needsReview ? "status--review" : "status--safe",
-    description: "Pull-back checks whether forecast operating cash may fall below the protected reserve and prepares a redemption only when there is a shortfall.",
-    metrics: [["Forecast low", rm(forecastLow)], ["Minimum reserve", rm(state.reserve)], ["Forecast shortfall", shortfall ? rm(shortfall) : "None"], ["Maximum pull-back", rm(automation.maxPullback)], ["Proposed pull-back", triggered ? rm(proposedPullback) : "None"], ["If triggered", automation.pullbackMode === "review" ? "Require review" : "Simulate automatically"]],
-    reason: shortfall ? `${rm(state.reserve)} reserve − ${rm(forecastLow)} forecast low = ${rm(shortfall)} shortfall.` : `${rm(forecastLow)} forecast low − ${rm(state.reserve)} reserve = ${rm(forecastLow - state.reserve)} safety buffer. The pull-back rule has not triggered.`,
+    description: "A concise view of the forecast liquidity position, required pull-back, and liquidity afterward.",
+    metrics: [[shortfall ? "Forecast shortfall" : "Safety buffer", rm(shortfall || forecastLow - state.reserve)], ["Pull-back needed", triggered ? rm(proposedPullback) : "None"], ["Liquidity after action", triggered ? rm(liquidityAfterPullback) : rm(forecastLow)]],
     next: !automation.autoPullback ? "This rule is turned off, so no redemption will be prepared." : needsReview ? `A simulated ${rm(proposedPullback)} pull-back is waiting for your approval. No money moves until you approve it.` : approved ? `You approved the ${rm(proposedPullback)} simulated pull-back in this browser session. No real funds were moved.` : triggered ? `The ${rm(proposedPullback)} pull-back meets the rule and is set to simulate automatically.` : "No pull-back proposal exists because forecast cash remains above the reserve.",
     needsReview,
     actionLabel: "Approve pull-back"
@@ -541,7 +539,6 @@ function openAutomationDetail(type) {
   $("#automation-detail-status").className = `automation-detail-status ${detail.statusClass}`;
   $("#automation-detail-description").textContent = detail.description;
   $("#automation-detail-metrics").innerHTML = detail.metrics.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join("");
-  $("#automation-detail-reason").textContent = detail.reason;
   $("#automation-detail-next").textContent = detail.next;
   $("#approve-automation-action").hidden = !detail.needsReview;
   $("#approve-automation-action").textContent = detail.actionLabel;

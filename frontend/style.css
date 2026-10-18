@@ -580,11 +580,10 @@ td small { color: var(--muted); font-size: .62rem; }
 .automation-detail-status.status--review { color: #942d2d; background: #ffe4e1; }
 .automation-detail-status.status--safe { color: var(--teal-800); background: var(--teal-100); }
 .automation-detail-status.status--off { color: var(--muted); background: #edf1f0; }
-.automation-detail-explanation, .automation-detail-next { margin-top: 1rem; padding: .85rem; border-radius: 10px; }
-.automation-detail-explanation { color: var(--teal-950); background: #eef8f6; border: 1px solid #cae6e0; }
+.automation-detail-next { margin-top: 1rem; padding: .85rem; border-radius: 10px; }
 .automation-detail-next { background: #f7faf9; border: 1px solid var(--line); }
-.automation-detail-explanation strong, .automation-detail-next strong { font-size: .7rem; }
-.automation-detail-explanation p, .automation-detail-next p { margin: .2rem 0 0; font-size: .7rem; line-height: 1.55; }
+.automation-detail-next strong { font-size: .7rem; }
+.automation-detail-next p { margin: .2rem 0 0; font-size: .7rem; line-height: 1.55; }
 .automation-detail-actions { flex-wrap: wrap; }
 .reserve-review-list { margin-top: 1.2rem; }
 .reserve-auth-password { margin-top: 1rem; }
