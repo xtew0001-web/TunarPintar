@@ -2,7 +2,7 @@
   "meta": {
     "label": "Demo data",
     "currency": "MYR",
-    "as_of": "4 October 2026, 9:00 AM",
+    "as_of": "20 October 2026, 9:00 AM",
     "forecast_horizon": "90 days",
     "disclaimer": "All figures, forecasts, recommendations and transactions are fictional and simulated. Returns are not guaranteed."
   },
@@ -22,29 +22,29 @@
   },
   "cash_flow": {
     "points": [
-      {"date": "15 Sep", "value": 318000, "kind": "actual"},
-      {"date": "22 Sep", "value": 366500, "kind": "actual"},
-      {"date": "29 Sep", "value": 397200, "kind": "actual"},
-      {"date": "4 Oct", "value": 428600, "kind": "actual"},
-      {"date": "11 Oct", "value": 384100, "kind": "forecast"},
-      {"date": "18 Oct", "value": 347800, "kind": "forecast"},
-      {"date": "25 Oct", "value": 402300, "kind": "forecast"},
-      {"date": "1 Nov", "value": 431900, "kind": "forecast"},
-      {"date": "15 Nov", "value": 376400, "kind": "forecast"},
-      {"date": "1 Dec", "value": 449200, "kind": "forecast"},
-      {"date": "31 Dec", "value": 472800, "kind": "forecast"}
+      {"date": "1 Oct", "value": 318000, "kind": "actual"},
+      {"date": "8 Oct", "value": 366500, "kind": "actual"},
+      {"date": "15 Oct", "value": 397200, "kind": "actual"},
+      {"date": "20 Oct", "value": 428600, "kind": "actual"},
+      {"date": "27 Oct", "value": 384100, "kind": "forecast"},
+      {"date": "3 Nov", "value": 347800, "kind": "forecast"},
+      {"date": "10 Nov", "value": 402300, "kind": "forecast"},
+      {"date": "17 Nov", "value": 431900, "kind": "forecast"},
+      {"date": "1 Dec", "value": 376400, "kind": "forecast"},
+      {"date": "17 Dec", "value": 449200, "kind": "forecast"},
+      {"date": "16 Jan", "value": 472800, "kind": "forecast"}
     ],
     "confidence": "Moderate",
     "lowest_forecast_balance": 347800,
-    "lowest_forecast_date": "18 October 2026",
+    "lowest_forecast_date": "3 November 2026",
     "summary": "Expected receipts keep cash above the RM220,000 minimum reserve throughout the current forecast."
   },
   "upcoming_expenses": [
-    {"id": 1, "date": "8 Oct 2026", "payee": "October payroll", "category": "Payroll", "amount": 42000, "status": "Scheduled"},
-    {"id": 2, "date": "10 Oct 2026", "payee": "Maju Packaging Sdn. Bhd.", "category": "Supplier", "amount": 31800, "status": "Scheduled"},
-    {"id": 3, "date": "15 Oct 2026", "payee": "Warehouse rent", "category": "Premises", "amount": 12500, "status": "Scheduled"},
-    {"id": 4, "date": "20 Oct 2026", "payee": "SST payment", "category": "Tax", "amount": 8400, "status": "Forecast"},
-    {"id": 5, "date": "27 Oct 2026", "payee": "Klang Valley Logistics", "category": "Logistics", "amount": 9100, "status": "Forecast"}
+    {"id": 1, "date": "24 Oct 2026", "payee": "October payroll", "category": "Payroll", "amount": 42000, "status": "Scheduled"},
+    {"id": 2, "date": "26 Oct 2026", "payee": "Maju Packaging Sdn. Bhd.", "category": "Supplier", "amount": 31800, "status": "Scheduled"},
+    {"id": 3, "date": "31 Oct 2026", "payee": "Warehouse rent", "category": "Premises", "amount": 12500, "status": "Scheduled"},
+    {"id": 4, "date": "5 Nov 2026", "payee": "SST payment", "category": "Tax", "amount": 8400, "status": "Forecast"},
+    {"id": 5, "date": "12 Nov 2026", "payee": "Klang Valley Logistics", "category": "Logistics", "amount": 9100, "status": "Forecast"}
   ],
   "investment": {
     "fund_name": "Amanah Liquid Fund-i",
@@ -69,20 +69,20 @@
       "minimum_reserve": 220000,
       "remaining_buffer": 88600,
       "reason": "Forecast receipts and the retained RM88,600 buffer are expected to cover known obligations above your minimum reserve.",
-      "settlement": "Simulated placement on 5 October 2026"
+      "settlement": "Simulated placement on 21 October 2026"
     }
   },
   "transactions": [
-    {"id": "TP-1042", "date": "4 Oct 2026", "description": "Rimba Retail invoice #884", "category": "Customer receipt", "type": "Inflow", "status": "Completed", "amount": 64000},
-    {"id": "TP-1041", "date": "3 Oct 2026", "description": "Amanah Liquid Fund-i return", "category": "Investment return", "type": "Investment", "status": "Completed", "amount": 278},
-    {"id": "TP-1040", "date": "2 Oct 2026", "description": "Kencana Grocers invoice #219", "category": "Customer receipt", "type": "Inflow", "status": "Completed", "amount": 48500},
-    {"id": "TP-1039", "date": "1 Oct 2026", "description": "Maju Packaging Sdn. Bhd.", "category": "Supplier payment", "type": "Outflow", "status": "Completed", "amount": -26750},
-    {"id": "TP-1038", "date": "30 Sep 2026", "description": "Automated cash sweep", "category": "Investment placement", "type": "Investment", "status": "Completed", "amount": -40000},
-    {"id": "TP-1037", "date": "29 Sep 2026", "description": "Warehouse utilities", "category": "Operating expense", "type": "Outflow", "status": "Completed", "amount": -3650},
-    {"id": "TP-1036", "date": "28 Sep 2026", "description": "Bumi Mini Market invoice #770", "category": "Customer receipt", "type": "Inflow", "status": "Completed", "amount": 32900},
-    {"id": "TP-1035", "date": "27 Sep 2026", "description": "October payroll provision", "category": "Payroll", "type": "Outflow", "status": "Pending", "amount": -42000},
-    {"id": "TP-1034", "date": "25 Sep 2026", "description": "Cash redemption for supplier run", "category": "Investment redemption", "type": "Investment", "status": "Completed", "amount": 25000},
-    {"id": "TP-1033", "date": "23 Sep 2026", "description": "Klang Valley Logistics", "category": "Logistics", "type": "Outflow", "status": "Completed", "amount": -8800}
+    {"id": "TP-1042", "date": "20 Oct 2026", "description": "Rimba Retail invoice #884", "category": "Customer receipt", "type": "Inflow", "status": "Completed", "amount": 64000},
+    {"id": "TP-1041", "date": "19 Oct 2026", "description": "Amanah Liquid Fund-i return", "category": "Investment return", "type": "Investment", "status": "Completed", "amount": 278},
+    {"id": "TP-1040", "date": "18 Oct 2026", "description": "Kencana Grocers invoice #219", "category": "Customer receipt", "type": "Inflow", "status": "Completed", "amount": 48500},
+    {"id": "TP-1039", "date": "17 Oct 2026", "description": "Maju Packaging Sdn. Bhd.", "category": "Supplier payment", "type": "Outflow", "status": "Completed", "amount": -26750},
+    {"id": "TP-1038", "date": "16 Oct 2026", "description": "Automated cash sweep", "category": "Investment placement", "type": "Investment", "status": "Completed", "amount": -40000},
+    {"id": "TP-1037", "date": "15 Oct 2026", "description": "Warehouse utilities", "category": "Operating expense", "type": "Outflow", "status": "Completed", "amount": -3650},
+    {"id": "TP-1036", "date": "14 Oct 2026", "description": "Bumi Mini Market invoice #770", "category": "Customer receipt", "type": "Inflow", "status": "Completed", "amount": 32900},
+    {"id": "TP-1035", "date": "13 Oct 2026", "description": "October payroll provision", "category": "Payroll", "type": "Outflow", "status": "Pending", "amount": -42000},
+    {"id": "TP-1034", "date": "11 Oct 2026", "description": "Cash redemption for supplier run", "category": "Investment redemption", "type": "Investment", "status": "Completed", "amount": 25000},
+    {"id": "TP-1033", "date": "9 Oct 2026", "description": "Klang Valley Logistics", "category": "Logistics", "type": "Outflow", "status": "Completed", "amount": -8800}
   ],
   "reports": [
     {"month": "October 2026", "short_month": "Oct", "opening_cash": 342572, "inflows": 112500, "outflows": 26472, "closing_cash": 428600, "average_surplus": 191400, "investment_return": 554},
@@ -90,9 +90,9 @@
     {"month": "August 2026", "short_month": "Aug", "opening_cash": 288100, "inflows": 138900, "outflows": 121800, "closing_cash": 305200, "average_surplus": 141800, "investment_return": 439}
   ],
   "integrations": [
-    {"id": "maybank", "name": "Maybank Business", "type": "Bank", "status": "Connected", "account": "Business Current ••4821", "last_sync": "4 Oct 2026, 8:58 AM"},
-    {"id": "cimb", "name": "CIMB BizChannel", "type": "Bank", "status": "Connected", "account": "Operating Account ••9064", "last_sync": "4 Oct 2026, 8:55 AM"},
-    {"id": "autocount", "name": "AutoCount Cloud", "type": "Accounting", "status": "Connected", "account": "Advanced Engineering Supplies", "last_sync": "4 Oct 2026, 8:51 AM"},
+    {"id": "maybank", "name": "Maybank Business", "type": "Bank", "status": "Connected", "account": "Business Current ••4821", "last_sync": "20 Oct 2026, 8:58 AM"},
+    {"id": "cimb", "name": "CIMB BizChannel", "type": "Bank", "status": "Connected", "account": "Operating Account ••9064", "last_sync": "20 Oct 2026, 8:55 AM"},
+    {"id": "autocount", "name": "AutoCount Cloud", "type": "Accounting", "status": "Connected", "account": "Advanced Engineering Supplies", "last_sync": "20 Oct 2026, 8:51 AM"},
     {"id": "xero", "name": "Xero", "type": "Accounting", "status": "Available", "account": "Not connected", "last_sync": "Never"}
   ],
   "settings": {
@@ -112,7 +112,7 @@
     {
       "level": "Watch",
       "title": "Supplier payments cluster next week",
-      "message": "RM73,800 of payroll and supplier payments are scheduled between 8 and 10 October. These are included in the reserve calculation."
+      "message": "RM73,800 of payroll and supplier payments are scheduled between 24 and 26 October. These are included in the reserve calculation."
     }
   ]
 }
