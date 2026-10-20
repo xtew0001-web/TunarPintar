@@ -2,7 +2,7 @@
   "meta": {
     "label": "Demo data",
     "currency": "MYR",
-    "as_of": "20 October 2026, 9:00 AM",
+    "as_of": "20 October 2026, 1:37 PM MYT",
     "forecast_horizon": "90 days",
     "disclaimer": "All figures, forecasts, recommendations and transactions are fictional and simulated. Returns are not guaranteed."
   },
@@ -90,9 +90,9 @@
     {"month": "August 2026", "short_month": "Aug", "opening_cash": 288100, "inflows": 138900, "outflows": 121800, "closing_cash": 305200, "average_surplus": 141800, "investment_return": 439}
   ],
   "integrations": [
-    {"id": "maybank", "name": "Maybank Business", "type": "Bank", "status": "Connected", "account": "Business Current ••4821", "last_sync": "20 Oct 2026, 8:58 AM"},
-    {"id": "cimb", "name": "CIMB BizChannel", "type": "Bank", "status": "Connected", "account": "Operating Account ••9064", "last_sync": "20 Oct 2026, 8:55 AM"},
-    {"id": "autocount", "name": "AutoCount Cloud", "type": "Accounting", "status": "Connected", "account": "Advanced Engineering Supplies", "last_sync": "20 Oct 2026, 8:51 AM"},
+    {"id": "maybank", "name": "Maybank Business", "type": "Bank", "status": "Connected", "account": "Business Current ••4821", "last_sync": "20 Oct 2026, 1:35 PM"},
+    {"id": "cimb", "name": "CIMB BizChannel", "type": "Bank", "status": "Connected", "account": "Operating Account ••9064", "last_sync": "20 Oct 2026, 1:34 PM"},
+    {"id": "autocount", "name": "AutoCount Cloud", "type": "Accounting", "status": "Connected", "account": "Advanced Engineering Supplies", "last_sync": "20 Oct 2026, 1:31 PM"},
     {"id": "xero", "name": "Xero", "type": "Accounting", "status": "Available", "account": "Not connected", "last_sync": "Never"}
   ],
   "settings": {
