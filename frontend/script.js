@@ -55,6 +55,7 @@ const initials = (email) => (email || "Demo User").split(/[@.\s_-]/).filter(Bool
 
 document.addEventListener("DOMContentLoaded", () => {
   bindStaticEvents();
+  startCurrentTimeClock();
   Object.assign(state.automation, readAutomationSettings());
   Object.assign(state.automationApprovals, readAutomationApprovals());
   state.automation.monitoring = true;
@@ -66,6 +67,25 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.removeItem("tunaiPintarDemoSession");
   }
 });
+
+function startCurrentTimeClock() {
+  const renderCurrentTime = () => {
+    const formattedTime = new Intl.DateTimeFormat("en-MY", {
+      timeZone: "Asia/Kuala_Lumpur",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    }).format(new Date());
+    $("#as-of").textContent = `Current time ${formattedTime} MYT`;
+  };
+
+  renderCurrentTime();
+  window.setInterval(renderCurrentTime, 1000);
+}
 
 function bindStaticEvents() {
   $("#login-form").addEventListener("submit", handleLogin);
@@ -306,7 +326,6 @@ async function loadDashboard() {
     state.data.settings.minimum_reserve = state.reserve;
     state.data.balances.reserved_cash = state.reserve;
     state.data.balances.estimated_surplus = Math.max(0, state.data.balances.total_business_cash - state.reserve);
-    $("#as-of").textContent = `As of ${data.meta.as_of}`;
     renderAll();
     $("#loading-state").hidden = true;
     $("#workspace").hidden = false;
