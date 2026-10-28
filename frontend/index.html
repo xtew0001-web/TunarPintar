@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#0F766E">
     <title>TunaiPintar — SME Treasury Demo</title>
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/style.css?v=20261018-6">
+    <link rel="stylesheet" href="/style.css?v=20261029-1">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -61,11 +61,57 @@
             <span class="brand-mark" aria-hidden="true">T</span><strong>TunaiPintar</strong>
           </div>
           <span class="demo-label"><span aria-hidden="true">●</span> Interactive prototype</span>
-          <h2>Welcome to TunaiPintar</h2>
-          <p>Sign in to explore your treasury workspace.</p>
+          <h2 id="auth-heading">Create your business workspace</h2>
+          <p id="auth-intro">Register as the first administrator for your company.</p>
           <p class="mobile-value-summary">Forecast obligations, protect liquidity and review potential treasury opportunities.</p>
 
-          <form id="login-form" novalidate>
+          <div class="auth-tabs" role="tablist" aria-label="Account access">
+            <button class="auth-tab active" id="register-tab" type="button" role="tab" aria-selected="true" aria-controls="register-form">Create account</button>
+            <button class="auth-tab" id="login-tab" type="button" role="tab" aria-selected="false" aria-controls="login-form">Sign in</button>
+          </div>
+
+          <form id="register-form" class="auth-form" role="tabpanel" aria-labelledby="register-tab" novalidate>
+            <div class="registration-grid">
+              <div class="field">
+                <label for="register-name">Full name</label>
+                <input id="register-name" name="full-name" type="text" autocomplete="name" placeholder="Aisyah Rahman" aria-describedby="register-name-error" required>
+                <span class="field-error" id="register-name-error" aria-live="polite"></span>
+              </div>
+              <div class="field">
+                <label for="register-company">Company name</label>
+                <input id="register-company" name="company" type="text" autocomplete="organization" placeholder="Your company Sdn. Bhd." aria-describedby="register-company-error" required>
+                <span class="field-error" id="register-company-error" aria-live="polite"></span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="register-email">Work email</label>
+              <input id="register-email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="finance@yourcompany.my" aria-describedby="register-email-error" required>
+              <span class="field-error" id="register-email-error" aria-live="polite"></span>
+            </div>
+            <div class="registration-grid">
+              <div class="field">
+                <label for="register-password">Password</label>
+                <input id="register-password" name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" aria-describedby="register-password-error" required>
+                <span class="field-error" id="register-password-error" aria-live="polite"></span>
+              </div>
+              <div class="field">
+                <label for="register-confirm-password">Confirm password</label>
+                <input id="register-confirm-password" name="confirm-password" type="password" autocomplete="new-password" placeholder="Enter it again" minlength="8" aria-describedby="register-confirm-error" required>
+                <span class="field-error" id="register-confirm-error" aria-live="polite"></span>
+              </div>
+            </div>
+            <div class="prototype-notice" role="note">
+              <span class="notice-icon" aria-hidden="true">i</span>
+              <p><strong>Supabase-secured registration.</strong> Your password is handled by Supabase Auth and is never stored by TunaiPintar.</p>
+            </div>
+            <p class="auth-error" id="register-error" role="alert" hidden></p>
+            <button class="button button--primary button--full login-submit" id="register-submit" type="submit">
+              <span class="button-label">Create account and continue</span>
+              <span class="button-spinner" aria-hidden="true"></span>
+            </button>
+          </form>
+
+          <form id="login-form" class="auth-form" role="tabpanel" aria-labelledby="login-tab" novalidate hidden>
             <div class="field">
               <label for="email">Work email</label>
               <input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="finance@yourcompany.my" aria-describedby="email-error" required>
@@ -73,29 +119,26 @@
             </div>
             <div class="field">
               <label for="password">Password</label>
-              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter any password" aria-describedby="password-error" required>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" aria-describedby="password-error" required>
               <span class="field-error" id="password-error" aria-live="polite"></span>
             </div>
-            <fieldset class="choice-group">
-              <legend>Demo investment preference</legend>
-              <label class="choice-card">
-                <input type="radio" name="compliance" value="Shariah" checked>
-                <span><strong>Shariah</strong><small>Islamic money market</small></span>
-              </label>
-              <label class="choice-card">
-                <input type="radio" name="compliance" value="Non-Shariah">
-                <span><strong>Conventional</strong><small>Conventional money market</small></span>
-              </label>
-            </fieldset>
             <div class="prototype-notice" role="note">
               <span class="notice-icon" aria-hidden="true">i</span>
-              <p><strong>Demo access only.</strong> No real financial accounts or funds are connected.</p>
+              <p><strong>Returning user?</strong> Sign in with the email and password registered through Supabase Auth.</p>
             </div>
+            <p class="auth-error" id="login-error" role="alert" hidden></p>
             <button class="button button--primary button--full login-submit" id="login-submit" type="submit">
-              <span class="button-label">Continue to workspace</span>
+              <span class="button-label">Sign in to workspace</span>
               <span class="button-spinner" aria-hidden="true"></span>
             </button>
           </form>
+
+          <section class="auth-confirmation" id="auth-confirmation" aria-live="polite" hidden>
+            <span class="auth-confirmation-icon" aria-hidden="true">✓</span>
+            <h3>Check your work email</h3>
+            <p>Supabase created your account. Confirm the verification email, then return here to sign in.</p>
+            <button class="button button--secondary button--full" id="confirmation-signin" type="button">Go to sign in</button>
+          </section>
         </div>
       </div>
     </section>
@@ -434,12 +477,12 @@
           <input id="reserve-auth-password" type="password" autocomplete="current-password" placeholder="Enter your password" aria-describedby="reserve-auth-error">
           <span class="field-error" id="reserve-auth-error" aria-live="polite"></span>
         </div>
-        <div class="modal-actions"><button class="button button--secondary" id="cancel-reserve-auth" type="button">Cancel</button><button class="button button--primary" type="submit">Confirm change</button></div>
+        <div class="modal-actions"><button class="button button--secondary" id="cancel-reserve-auth" type="button">Cancel</button><button class="button button--primary" id="reserve-auth-submit" type="submit">Confirm change</button></div>
       </form>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden><span class="toast-icon" aria-hidden="true">✓</span><div><strong id="toast-title">Updated</strong><p id="toast-message"></p></div><button type="button" id="toast-close" aria-label="Dismiss notification">×</button></div>
 
-    <script src="/script.js?v=20261018-8" defer></script>
+    <script src="/script.js?v=20261029-1" defer></script>
   </body>
 </html>
