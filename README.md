@@ -2,7 +2,7 @@
 
 TunaiPintar is an assignment prototype for an AI-powered treasury robo-advisor aimed at Malaysian SMEs. It illustrates how a business could combine accounting and banking context to forecast obligations, protect a minimum cash reserve, and identify genuinely surplus cash for a proposed investment sweep.
 
-The prototype is an educational business-idea showcase. It can use Supabase Auth for real email/password registration and sign-in, but it does not provide production-grade authorization, financial advice, bank connectivity, forecasting AI, or investment execution.
+The prototype is an educational business-idea showcase. It does not provide financial advice, real authentication, bank connectivity, forecasting AI, or investment execution.
 
 ## Business value demonstrated
 
@@ -21,18 +21,17 @@ The prototype is an educational business-idea showcase. It can use Supabase Auth
 - Local JSON demo data as the default and automatic fallback
 - Inline SVG charts generated in the browser
 
-Supabase is an optional hosted source for the same fictional JSON snapshot and
-provides the registration/sign-in service when configured. This does not make
-the prototype a real financial system. There is no frontend framework, charting
-package, bank connection, or real financial integration. One Flask server
-serves both the frontend and API.
+Supabase is an optional hosted source for the same fictional JSON snapshot. It
+does not make the prototype a real financial system. There is no frontend
+framework, charting package, real authentication, bank connection, or real
+financial integration. One Flask server serves both the frontend and API.
 
-The current financial record is seeded demonstration data for the fictional
-**Advanced Engineering Supplies Sdn. Bhd.** workspace. Supabase Auth identifies
-registered users, but the dashboard still serves the same shared fictional
-financial snapshot. In a production version, relational tables would store each
-customer's business records and Row Level Security would isolate every
-business's data.
+The current Supabase record is seeded demonstration data for the fictional
+**Advanced Engineering Supplies Sdn. Bhd.** workspace. In a production version,
+Supabase Auth would identify each customer, relational tables would store that
+customer's business records, and Row Level Security would isolate every
+business's data. The prototype does not claim that this multi-customer storage
+is implemented yet.
 
 ## Project structure
 
@@ -47,7 +46,6 @@ project/
 │       └── favicon.svg
 ├── backend/
 │   ├── app.py
-│   ├── auth_service.py
 │   ├── data_provider.py
 │   └── demo_data.json
 ├── scripts/
@@ -91,16 +89,7 @@ python backend/app.py
 
 Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) in a browser.
 
-Register with a name, company name, work email and password. When
-`SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are configured, Supabase Auth
-creates the account and verifies future sign-ins. If Supabase email confirmation
-is enabled, the user must follow the confirmation email before signing in. For a
-presentation that enters the workspace immediately after registration, disable
-**Confirm Email** in the Supabase email-provider settings.
-
-The registered company name is stored in Supabase user metadata and labels the
-browser's demo workspace. Dashboard financial data remains the shared fictional
-dataset; it is not yet isolated per registered business.
+Use any validly formatted email address and any non-empty password. Choose either Shariah or Conventional to change the fictional fund example. This is only a simulated login; it does not create an account or provide real security.
 
 Stop the development server with `Ctrl+C`.
 
@@ -193,8 +182,6 @@ Health check path: /health
 
 - `GET /` — frontend application
 - `GET /api/dashboard` — fictional dashboard data from JSON or Supabase
-- `POST /api/auth/register` — create a Supabase Auth user
-- `POST /api/auth/login` — verify a Supabase email/password sign-in
 - `GET /health` — service status and configured data source
 - `/style.css`, `/script.js`, and `/assets/...` — frontend resources
 
@@ -202,7 +189,7 @@ The seven workspace destinations use URL hashes such as `#cash-flow` and `#inves
 
 ## Features and interactions
 
-- Supabase email/password registration and sign-in with loading and validation states
+- Demo login with email-format validation, loading feedback, and compliance preference
 - Authenticated-looking responsive dashboard with four cash metrics
 - Historical and simulated forecast cash-flow chart
 - 30-, 60-, and 90-day forecast controls
@@ -239,14 +226,10 @@ Changing settings, confirming a sweep, connecting an integration, or choosing no
 ## Demo limitations and disclaimer
 
 - All company names, accounts, balances, invoices, payments, funds, returns, forecasts, reports, and AI insights are fictional.
-- Registration and sign-in are verified by Supabase Auth when configured. The
-  Flask server passes credentials to Supabase over HTTPS and does not persist
-  plaintext passwords.
-- The browser still uses `sessionStorage` as a display convenience, and the
-  shared demo dashboard route is not protected by a user JWT. This is not
-  production-grade authorization.
-- Supabase persists registered Auth users and a seeded copy of the fictional
-  starting dataset; there is no per-business financial-data persistence yet.
+- The login uses `sessionStorage` as a display convenience. It is not authentication and should never be used for a real system.
+- No password is sent to or stored by the Flask backend.
+- Supabase contains only a seeded copy of the fictional starting dataset; there
+  is no server-side user persistence.
 - There is no connection to a bank, accounting platform, payment rail, fund manager, or licensed investment provider.
 - No money is moved, and no investment order is created or redeemed.
 - The “AI” insight and forecast are prepared demo data, not the output of a trained production model.

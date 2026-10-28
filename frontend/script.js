@@ -39,6 +39,7 @@ const state = {
   },
   pendingSettings: null,
   isLoggingIn: false,
+  loginTimer: null,
   toastTimer: null
 };
 
@@ -59,9 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
   Object.assign(state.automationApprovals, readAutomationApprovals());
   state.automation.monitoring = true;
   const session = readSession();
-  if (session?.authenticated && session?.email) {
+  if (session?.passwordProof) {
     state.compliance = session.compliance || "Shariah";
-    showApplication(session);
+    showApplication(session.email);
   } else if (session) {
     sessionStorage.removeItem("tunaiPintarDemoSession");
   }
@@ -87,10 +88,6 @@ function startCurrentTimeClock() {
 }
 
 function bindStaticEvents() {
-  $("#register-tab").addEventListener("click", () => showAuthMode("register"));
-  $("#login-tab").addEventListener("click", () => showAuthMode("login"));
-  $("#confirmation-signin").addEventListener("click", () => showAuthMode("login"));
-  $("#register-form").addEventListener("submit", handleRegistration);
   $("#login-form").addEventListener("submit", handleLogin);
   $("#email").addEventListener("blur", () => {
     $("#email").value = $("#email").value.trim();
@@ -101,9 +98,6 @@ function bindStaticEvents() {
   });
   $("#password").addEventListener("input", () => {
     if ($("#password").value.trim()) setFieldError($("#password"), $("#password-error"), "");
-  });
-  ["#register-name", "#register-company", "#register-email", "#register-password", "#register-confirm-password"].forEach((selector) => {
-    $(selector).addEventListener("input", () => clearRegistrationFieldError(selector));
   });
   $("#logout-button").addEventListener("click", logout);
   $("#demo-info-button").addEventListener("click", () => showToast("Seeded Supabase demo", "This prototype uses fictional seeded data from Supabase. In production, each authenticated customer's business data would be stored separately and protected by access controls."));
@@ -227,135 +221,19 @@ function validateEmail(showError = true) {
   return valid;
 }
 
-function showAuthMode(mode) {
-  const isRegister = mode === "register";
-  $("#register-form").hidden = !isRegister;
-  $("#login-form").hidden = isRegister;
-  $("#auth-confirmation").hidden = true;
-  $("#register-tab").classList.toggle("active", isRegister);
-  $("#login-tab").classList.toggle("active", !isRegister);
-  $("#register-tab").setAttribute("aria-selected", String(isRegister));
-  $("#login-tab").setAttribute("aria-selected", String(!isRegister));
-  $("#auth-heading").textContent = isRegister ? "Create your business workspace" : "Welcome back";
-  $("#auth-intro").textContent = isRegister
-    ? "Register as the first administrator for your company."
-    : "Sign in to access your SME treasury workspace.";
-  $(isRegister ? "#register-name" : "#email").focus();
-}
-
-function clearRegistrationFieldError(selector) {
-  const errorSelectors = {
-    "#register-name": "#register-name-error",
-    "#register-company": "#register-company-error",
-    "#register-email": "#register-email-error",
-    "#register-password": "#register-password-error",
-    "#register-confirm-password": "#register-confirm-error"
-  };
-  const input = $(selector);
-  const error = $(errorSelectors[selector]);
-  if (input.value.trim()) setFieldError(input, error, "");
-  $("#register-error").hidden = true;
-}
-
 function resetLoginButton() {
   state.isLoggingIn = false;
-  [
-    ["#login-submit", "Sign in to workspace"],
-    ["#register-submit", "Create account and continue"]
-  ].forEach(([selector, label]) => {
-    const button = $(selector);
-    button.disabled = false;
-    button.classList.remove("is-loading");
-    button.removeAttribute("aria-busy");
-    $(".button-label", button).textContent = label;
-  });
+  const button = $("#login-submit");
+  button.disabled = false;
+  button.classList.remove("is-loading");
+  button.removeAttribute("aria-busy");
+  $(".button-label", button).textContent = "Continue to workspace";
 }
 
-function setAuthLoading(button, label) {
-  state.isLoggingIn = true;
-  button.disabled = true;
-  button.classList.add("is-loading");
-  button.setAttribute("aria-busy", "true");
-  $(".button-label", button).textContent = label;
-}
-
-async function requestAuth(endpoint, payload) {
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(payload)
-  });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error || "Unable to contact Supabase Auth.");
-  return result;
-}
-
-async function handleRegistration(event) {
-  event.preventDefault();
-  if (state.isLoggingIn) return;
-
-  const fields = {
-    name: $("#register-name"),
-    company: $("#register-company"),
-    email: $("#register-email"),
-    password: $("#register-password"),
-    confirm: $("#register-confirm-password")
-  };
-  const values = {
-    name: fields.name.value.trim(),
-    company: fields.company.value.trim(),
-    email: fields.email.value.trim(),
-    password: fields.password.value,
-    confirm: fields.confirm.value
-  };
-
-  setFieldError(fields.name, $("#register-name-error"), values.name ? "" : "Enter your full name.");
-  setFieldError(fields.company, $("#register-company-error"), values.company ? "" : "Enter your company name.");
-  setFieldError(fields.email, $("#register-email-error"), isValidEmail(values.email) && fields.email.validity.valid ? "" : "Enter a valid work email address.");
-  setFieldError(fields.password, $("#register-password-error"), values.password.length >= 8 ? "" : "Use at least 8 characters.");
-  setFieldError(fields.confirm, $("#register-confirm-error"), values.confirm === values.password && values.confirm ? "" : "Passwords must match.");
-
-  const firstInvalid = Object.values(fields).find((input) => input.getAttribute("aria-invalid") === "true");
-  if (firstInvalid) {
-    firstInvalid.focus();
-    return;
-  }
-
-  const button = $("#register-submit");
-  setAuthLoading(button, "Creating secure account");
-  $("#register-error").hidden = true;
-  try {
-    const result = await requestAuth("/api/auth/register", {
-      full_name: values.name,
-      company_name: values.company,
-      email: values.email,
-      password: values.password
-    });
-    if (result.authenticated) {
-      const session = {
-        authenticated: true,
-        userId: result.user.id,
-        email: result.user.email,
-        fullName: result.user.full_name || values.name,
-        companyName: result.user.company_name || values.company,
-        compliance: "Shariah"
-      };
-      sessionStorage.setItem("tunaiPintarDemoSession", JSON.stringify(session));
-      state.compliance = session.compliance;
-      showApplication(session);
-    } else {
-      $("#register-form").hidden = true;
-      $("#login-form").hidden = true;
-      $("#auth-confirmation").hidden = false;
-      $("#auth-heading").textContent = "Account created";
-      $("#auth-intro").textContent = "One quick verification step remains.";
-    }
-  } catch (error) {
-    $("#register-error").textContent = error.message;
-    $("#register-error").hidden = false;
-  } finally {
-    resetLoginButton();
-  }
+async function createPasswordProof(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 async function handleLogin(event) {
@@ -364,7 +242,7 @@ async function handleLogin(event) {
   const emailInput = $("#email");
   const passwordInput = $("#password");
   const email = emailInput.value.trim();
-  const password = passwordInput.value;
+  const password = passwordInput.value.trim();
   emailInput.value = email;
   const emailValid = validateEmail(true);
   let passwordValid = true;
@@ -380,36 +258,27 @@ async function handleLogin(event) {
     return;
   }
 
+  state.compliance = $("input[name='compliance']:checked").value;
+  const session = { email, compliance: state.compliance, passwordProof: await createPasswordProof(password) };
+  state.isLoggingIn = true;
   const button = $("#login-submit");
-  setAuthLoading(button, "Signing in securely");
-  $("#login-error").hidden = true;
-  try {
-    const result = await requestAuth("/api/auth/login", { email, password });
-    const session = {
-      authenticated: true,
-      userId: result.user.id,
-      email: result.user.email || email,
-      fullName: result.user.full_name || "",
-      companyName: result.user.company_name || "",
-      compliance: "Shariah"
-    };
+  button.disabled = true;
+  button.classList.add("is-loading");
+  button.setAttribute("aria-busy", "true");
+  $(".button-label", button).textContent = "Preparing workspace";
+  state.loginTimer = window.setTimeout(() => {
     sessionStorage.setItem("tunaiPintarDemoSession", JSON.stringify(session));
-    state.compliance = session.compliance;
-    showApplication(session);
-  } catch (error) {
-    $("#login-error").textContent = error.message;
-    $("#login-error").hidden = false;
-  } finally {
+    showApplication(email);
     resetLoginButton();
-  }
+    state.loginTimer = null;
+  }, 420);
 }
 
-function showApplication(account) {
-  const email = account.email;
+function showApplication(email) {
   state.userEmail = email;
   if (!state.profile) {
     const localName = email.split("@")[0].split(/[._-]+/).filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
-    state.profile = { name: account.fullName || localName || "Finance User", role: "Workspace owner", email };
+    state.profile = { name: localName || "Demo Finance User", role: "Finance manager", email };
   }
   $("#login-screen").hidden = true;
   $("#app").hidden = false;
@@ -419,6 +288,8 @@ function showApplication(account) {
 }
 
 function logout() {
+  if (state.loginTimer) window.clearTimeout(state.loginTimer);
+  state.loginTimer = null;
   resetLoginButton();
   sessionStorage.removeItem("tunaiPintarDemoSession");
   sessionStorage.removeItem("tunaiPintarAutomationSettings");
@@ -430,12 +301,12 @@ function logout() {
   $("#app").hidden = true;
   $("#login-screen").hidden = false;
   $("#password").value = "";
-  showAuthMode("login");
   document.title = "TunaiPintar — SME Treasury Demo";
   closeAutomationDetail(false);
   closeReserveAuth(false);
   closeAutomationDrawer(false);
   closeSidebar();
+  $("#email").focus();
 }
 
 async function loadDashboard() {
@@ -467,18 +338,14 @@ async function loadDashboard() {
 }
 
 function normalizeDemoIdentity(data) {
-  const session = readSession() || {};
-  const companyName = session.companyName || "Advanced Engineering Supplies Sdn. Bhd.";
-  const displayName = companyName.replace(/\s+Sdn\.?\s+Bhd\.?$/i, "").trim() || companyName;
-  const shortName = displayName.split(/\s+/).filter(Boolean).slice(0, 3).map((word) => word[0].toUpperCase()).join("") || "SME";
   data.company = {
     ...data.company,
-    name: companyName,
-    display_name: displayName,
-    short_name: shortName
+    name: "Advanced Engineering Supplies Sdn. Bhd.",
+    display_name: "Advanced Engineering",
+    short_name: "AES"
   };
   const autoCount = data.integrations?.find((integration) => integration.id === "autocount");
-  if (autoCount) autoCount.account = displayName;
+  if (autoCount) autoCount.account = "Advanced Engineering Supplies";
 }
 
 function renderAll() {
@@ -1051,24 +918,12 @@ async function confirmReserveChange(event) {
     passwordInput.focus();
     return;
   }
-  if (!session?.email) {
-    setFieldError(passwordInput, $("#reserve-auth-error"), "Your session has expired. Sign in again.");
+  if (!session?.passwordProof || await createPasswordProof(password) !== session.passwordProof) {
+    setFieldError(passwordInput, $("#reserve-auth-error"), "The password does not match this demo session.");
     passwordInput.focus();
     return;
   }
-  const submit = $("#reserve-auth-submit");
-  submit.disabled = true;
-  submit.textContent = "Verifying…";
-  try {
-    await requestAuth("/api/auth/login", { email: session.email, password });
-    applyPendingSettings(true);
-  } catch (error) {
-    setFieldError(passwordInput, $("#reserve-auth-error"), error.message);
-    passwordInput.focus();
-  } finally {
-    submit.disabled = false;
-    submit.textContent = "Confirm change";
-  }
+  applyPendingSettings(true);
 }
 
 function applyPendingSettings(reserveChanged) {
