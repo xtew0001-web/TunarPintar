@@ -21,17 +21,21 @@ The prototype is an educational business-idea showcase. It does not provide fina
 - Local JSON demo data as the default and automatic fallback
 - Inline SVG charts generated in the browser
 
-Supabase is an optional hosted source for the same fictional JSON snapshot. It
-does not make the prototype a real financial system. There is no frontend
-framework, charting package, real authentication, bank connection, or real
-financial integration. One Flask server serves both the frontend and API.
+The current prototype uses fictional demonstration data to illustrate the
+dashboard functions and treasury management processes. Supabase has been
+connected as a seeded data environment containing a read-only copy of this
+dataset, while local JSON remains the default source and automatic fallback.
+This connection does not make the prototype a real financial system. There is
+no frontend framework, charting package, real authentication, bank connection,
+or real financial integration. One Flask server serves both the frontend and
+API.
 
-The current Supabase record is seeded demonstration data for the fictional
-**Advanced Engineering Supplies Sdn. Bhd.** workspace. In a production version,
-Supabase Auth would identify each customer, relational tables would store that
-customer's business records, and Row Level Security would isolate every
-business's data. The prototype does not claim that this multi-customer storage
-is implemented yet.
+The seeded Supabase record represents the fictional **Advanced Engineering
+Supplies Sdn. Bhd.** workspace. In future development, Supabase Auth would
+identify each customer, relational tables would record business-specific
+financial information, and Row Level Security would ensure that each SME can
+access only its own data. This multi-customer storage and access model is not
+implemented in the current prototype.
 
 ## Project structure
 
@@ -93,12 +97,14 @@ Use any validly formatted email address and any non-empty password. Choose eithe
 
 Stop the development server with `Ctrl+C`.
 
-## Optional Supabase demo data
+## Seeded Supabase demo environment
 
-The app uses `backend/demo_data.json` unless `DATA_SOURCE=supabase` is set.
-Supabase stores one read-only copy of the same fictional dataset in the
-`demo_snapshots` table. If the Supabase request fails, Flask logs the error and
-returns the local JSON automatically.
+The app uses `backend/demo_data.json` by default to provide reliable fictional
+data for the demonstration. The connected Supabase environment stores a
+read-only seeded copy of the same dataset in the `demo_snapshots` table. Setting
+`DATA_SOURCE=supabase` instructs the Flask backend to retrieve this hosted copy.
+If the Supabase request fails, Flask logs the error and returns the local JSON
+automatically.
 
 This single snapshot is intentionally simple for the assignment demo. A future
 customer-ready version should replace it with separate tables for businesses,
@@ -228,8 +234,9 @@ Changing settings, confirming a sweep, connecting an integration, or choosing no
 - All company names, accounts, balances, invoices, payments, funds, returns, forecasts, reports, and AI insights are fictional.
 - The login uses `sessionStorage` as a display convenience. It is not authentication and should never be used for a real system.
 - No password is sent to or stored by the Flask backend.
-- Supabase contains only a seeded copy of the fictional starting dataset; there
-  is no server-side user persistence.
+- Supabase is currently a seeded demonstration environment containing one
+  read-only fictional dataset; it does not yet record individual customer data
+  or provide server-side user persistence.
 - There is no connection to a bank, accounting platform, payment rail, fund manager, or licensed investment provider.
 - No money is moved, and no investment order is created or redeemed.
 - The “AI” insight and forecast are prepared demo data, not the output of a trained production model.
